@@ -1,9 +1,7 @@
 var events = require('events'),
     newId = require('node-uuid').v4,
     Serializer = require('./serializer'),
-    util = require('util'),
-    rejectedMessages = {},
-    MAX_RETRIES = 3;
+    util = require('util');
 
 function QueueRegistry () {
   this.serializer = new Serializer();
