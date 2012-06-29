@@ -21,7 +21,6 @@ describe('servicebus (child_processes)', function(){
       var sender = cp.fork(__dirname + '/child_processes/sender.js');
 
       bus.listen('event.22', function (event) {
-        console.log(event);
         tryDone();
       }); 
 
