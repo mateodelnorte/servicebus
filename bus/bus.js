@@ -35,9 +35,10 @@ function Bus(options, implOpts) {
 }
 
 function packageEvent(queueName, message, cid) {
+  var data = message;
   var event = {
       cid: message.cid || cid || newId()
-    , data: message
+    , data: data
     , datetime: message.datetime || new Date().toUTCString()
     , type: message.type || queueName
   };
@@ -82,9 +83,6 @@ Bus.prototype.send = function send(queueName, message, cid) {
 
 Bus.prototype._send = function send(queueName, message) {
   var self = this;
-  if( ! message.cid){
-    message.cid = newId();
-  }
   if (self.initialized) {
     if (self.queues[queueName] === undefined) {
       self.queues[queueName] = new Queue(self.connection, queueName, { log: self.log });
@@ -93,7 +91,7 @@ Bus.prototype._send = function send(queueName, message) {
   } else {
     var resend = function() {
       self.initialized = true;
-      self.send(queueName, message);
+      self._send(queueName, message);
     };
     var timeout = function(){
       self.log.debug('timout triggered');
@@ -144,9 +142,6 @@ Bus.prototype.publish = function publish(queueName, message, cid) {
 
 Bus.prototype._publish = function _publish(queueName, message, cid) {
   var self = this;
-  if( ! message.cid){
-    message.cid = cid || newId();
-  }
   if (self.initialized) {
     if (self.pubsubqueues[queueName] === undefined) {
       this.log.debug('creating pubsub queue ' + queueName);
@@ -156,7 +151,7 @@ Bus.prototype._publish = function _publish(queueName, message, cid) {
   } else {
     var republish = function() {
       self.initialized = true;
-      self.publish(queueName, message);
+      self._publish(queueName, message);
     };
     var timeout = function() {
       self.connection.removeListener('ready', republish);
