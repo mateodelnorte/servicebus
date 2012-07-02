@@ -25,7 +25,7 @@
   
 ## Round-Robin Load Distribution
 
-  Simply running multiple versions of Process B, above, will cause servicebus to distribute sent messages evenly accross the list of listeners, in a round-robin pattern. 
+  Simply running multiple versions of Process A, above, will cause servicebus to distribute sent messages evenly accross the list of listeners, in a round-robin pattern. 
 
 ## Message Acknowledgement
 
