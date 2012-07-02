@@ -43,17 +43,17 @@
 
   Servicebus can also send messages from 1:N processes in a fan-out architecture. In this pattern, one sender publishes a message and any number of subscribers can receive. The pattern for usage looks very similar to send/listen:
 
-    Process A (can be run any number of times, all will receive the event):
-      
-      var bus = require('servicebus').bus();
-      bus.subscribe('my.event', function (event) {
-        console.log(event);
-      });
+  Process A (can be run any number of times, all will receive the event):
+    
+    var bus = require('servicebus').bus();
+    bus.subscribe('my.event', function (event) {
+      console.log(event);
+    });
 
-    Process B:
-      
-      var bus = require('servicebus').bus();
-      
-      setInterval(function () {
-        bus.publish('my.event', { my: 'event' });
-      }, 1000);
+  Process B:
+    
+    var bus = require('servicebus').bus();
+    
+    setInterval(function () {
+      bus.publish('my.event', { my: 'event' });
+    }, 1000);
