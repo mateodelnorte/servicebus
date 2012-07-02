@@ -1,5 +1,7 @@
 {
   "author": "Matt Walters <mattwalters5@gmail.com>",
+  "contributors": 
+   [ "mattwalters5@gmail.com", "timisbusy@gmail.com" ],
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
   "version": "0.0.1",
