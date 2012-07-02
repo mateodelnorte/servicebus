@@ -2,7 +2,7 @@
   "author": "Matt Walters <mattwalters5@gmail.com>",
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "homepage": "https://github.com/mateodelnorte/servicebus",
   "repository": {
     "type": "git",
