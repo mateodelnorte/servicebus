@@ -37,7 +37,7 @@ function Bus(options, implOpts) {
 function packageEvent(queueName, message, cid) {
   var data = message;
   var event = {
-      cid: message.cid || cid || newId()
+      cid: cid || message.cid || newId()
     , data: data
     , datetime: message.datetime || new Date().toUTCString()
     , type: message.type || queueName
