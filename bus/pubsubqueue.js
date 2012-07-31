@@ -5,7 +5,7 @@ var events = require('events'),
 
 function QueueRegistry () {
   this.serializer = new Serializer();
-  this.queues = null;
+  this.queues = {};
 }
 
 QueueRegistry.prototype.getCurrentQueues = function getCurrentQueues (callback) {
