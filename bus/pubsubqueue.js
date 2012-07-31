@@ -44,26 +44,32 @@ Correlator.prototype.getUniqueId = function getUniqueId (queueName, subscription
       else callback(null, id);
     });
   }
-}
+};
 
 function PubSubQueue (connection, queueName, options) {
   this.connection = connection;
   this.correlator = new Correlator();
   this.errorQueueName = queueName + '.error';
-  this.exchange = connection.exchange('amq.topic', { type: 'topic', durable: true, autoDelete: false });
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
   this.queueName = queueName;
-  this.rejected = {};
-
-  
+  this.rejected = {}; 
   var self = this;
-}
+  connection.exchange('amq.topic', { type: 'topic', durable: true, autoDelete: false }, function (exchange) {
+    self.exchange = exchange;
+  });
+};
 
 PubSubQueue.prototype.publish = function publish (event) {
   var self = this;
-  this.log.debug('publishing to exchange ' + self.exchange.name + ' ' + self.queueName + ' event ' + util.inspect(event));
-  self.exchange.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
+  if ( ! this.exchange) {
+    this.connection.on('ready', function () {
+      self.publish(event);
+    });
+  } else {
+    this.log.debug('publishing to exchange ' + self.exchange.name + ' ' + self.queueName + ' event ' + util.inspect(event));
+    self.exchange.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
+  }
 };
 
 PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
