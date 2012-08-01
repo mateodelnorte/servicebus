@@ -68,8 +68,11 @@ Queue.prototype.listen = function listen (callback, options) {
 };
 
 Queue.prototype.send = function send (event) {
+  var self = this;
   this.log.debug('sending to queue ' + this.queueName + ' event ' + util.inspect(event));
-  this.connection.publish(this.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
+  process.nextTick(function () {
+    self.connection.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
+  });
 };
 
 module.exports = Queue;

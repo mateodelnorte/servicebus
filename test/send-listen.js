@@ -1,6 +1,6 @@
 var noop = function () {};
 var log = { debug: noop, info: noop, warn: noop, error: noop };
-var bus = require('../bus/bus').bus({ log: log });
+var bus = require('../bus/bus').bus({ log : log });
 
 describe('servicebus', function(){
 
@@ -76,10 +76,13 @@ describe('servicebus', function(){
         handle.ack();
       });
       setTimeout(function () {
-        bus.send('my.event.4', { my: 'event' });
-        bus.send('my.event.4', { my: 'event' });
-        bus.send('my.event.4', { my: 'event' });
-        bus.send('my.event.4', { my: 'event' });
+        //process.nextTick(function () {
+
+          bus.send('my.event.4', { my: 'event' });
+          bus.send('my.event.4', { my: 'event' });
+          bus.send('my.event.4', { my: 'event' });
+          bus.send('my.event.4', { my: 'event' });
+        //});
       }, 10);
     });
   

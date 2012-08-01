@@ -30,6 +30,7 @@ function Bus(options, implOpts) {
   });
 
   this.connection.on('ready', function () {
+    self.initialized = true;
     self.log.debug("rabbitmq connected to " + self.connection.serverProperties.product);
   });
 }
@@ -47,7 +48,7 @@ function packageEvent(queueName, message, cid) {
 
 Bus.prototype.listen = function listen(queueName, options, callback) {
   var self = this;
-
+  this.log.debug('calling listen dog: ', queueName);
   if (typeof options === "function") {
     callback = options;
     options = {};
@@ -60,18 +61,12 @@ Bus.prototype.listen = function listen(queueName, options, callback) {
     }
     self.queues[queueName].listen(callback, options);
   } else {
-    var relisten = function() {
-      self.initialized = true;
-      self.listen(queueName, options, callback);
-    };
-    var timeout = function(){
-      self.connection.removeListener('ready', relisten);
-      process.nextTick(relisten);
-    };
-    var timeoutId = setTimeout(timeout, self.delayOnStartup);
     self.connection.on('ready', function() {
-      clearTimeout(timeoutId);
-      process.nextTick(relisten);
+      self.log.debug('penis');
+      process.nextTick(function() {
+        self.initialized = true;
+        self.listen(queueName, options, callback);
+      });
     });
   }
 };
@@ -119,18 +114,11 @@ Bus.prototype.subscribe = function subscribe(queueName, options, callback) {
     }
     self.pubsubqueues[queueName].subscribe(callback, options); 
   } else {
-    var resubscribe = function() {
-      self.initialized = true;
-      self.subscribe(queueName, options, callback);
-    };
-    var timeout = function() {
-      self.connection.removeListener('ready', resubscribe);
-      process.nextTick(resubscribe);
-    };
-    var timeoutId = setTimeout(timeout, 1000);
     self.connection.on('ready', function() {
-      clearTimeout(timeoutId);
-      process.nextTick(resubscribe);
+      process.nextTick(function() {
+        self.initialized = true;
+        self.subscribe(queueName, options, callback);
+      });
     });
   }
 };

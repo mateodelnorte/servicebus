@@ -68,7 +68,9 @@ PubSubQueue.prototype.publish = function publish (event) {
     });
   } else {
     this.log.debug('publishing to exchange ' + self.exchange.name + ' ' + self.queueName + ' event ' + util.inspect(event));
-    self.exchange.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
+    process.nextTick(function () {
+      self.exchange.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
+    });
   }
 };
 
