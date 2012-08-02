@@ -57,13 +57,15 @@ function PubSubQueue (connection, queueName, options) {
   var self = this;
   connection.exchange('amq.topic', { type: 'topic', durable: true, autoDelete: false }, function (exchange) {
     self.exchange = exchange;
+    self.connection.emit('readyToPublish');
   });
 };
 
 PubSubQueue.prototype.publish = function publish (event) {
   var self = this;
   if ( ! this.exchange) {
-    this.connection.on('ready', function () {
+    this.connection.on('readyToPublish', function () {
+      console.log('ready fired');
       self.publish(event);
     });
   } else {
