@@ -6,10 +6,11 @@ var util = require('util'),
     newId = require('node-uuid');
 
 function Bus(options, implOpts) {
+  var noop = function () {};
   options = options || {}, implOpts, self = this;
   options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
   implOpts =  implOpts || { defaultExchangeName: 'amq.topic' };
-  this.log = options.log || { debug: console.log, info: console.log, warn: console.log, error: console.log };
+  this.log = options.log || { debug: noop, info: noop, warn: noop, error: noop };
   
   this.delayOnStartup = options.delayOnStartup || 10;
   this.initialized = false;
