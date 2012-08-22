@@ -65,7 +65,6 @@ PubSubQueue.prototype.publish = function publish (event) {
   var self = this;
   if ( ! this.exchange) {
     this.connection.on('readyToPublish', function () {
-      console.log('ready fired');
       self.publish(event);
     });
   } else {
