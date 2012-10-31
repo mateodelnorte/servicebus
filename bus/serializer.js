@@ -13,7 +13,7 @@ util.inherits(Serializer, events.EventEmitter);
 
 Serializer.prototype.deserialize = function deserialize() {
   var self = this;
-  fs.readFile(this.filename, function (err, data) {
+  fs.readFile(this.filename, "utf-8", function (err, data) {
     if (err) {
       self.emit('deserialized', {})
     } else {
