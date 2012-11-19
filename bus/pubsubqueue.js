@@ -110,7 +110,7 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
     self.connection.queue(self.errorQueueName, queueOptions, function(q) {
       q.bind(self.exchange, self.errorQueueName);
       q.on('queueBindOk', function() {
-        self.log.debug('bound to ' + self.log.errorQueueName);  
+        self.log.debug('bound to ' + self.errorQueueName);  
       });
     });
   }
