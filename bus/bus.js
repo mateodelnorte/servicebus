@@ -142,13 +142,7 @@ Bus.prototype._publish = function _publish(queueName, message, cid) {
       self.initialized = true;
       self._publish(queueName, message);
     };
-    var timeout = function() {
-      self.connection.removeListener('ready', republish);
-      process.nextTick(republish);
-    };
-    var timeoutId = setTimeout(timeout, 1000);
     self.connection.on('ready', function() {
-      clearTimeout(timeoutId);
       process.nextTick(republish);
     });
   }
