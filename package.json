@@ -4,7 +4,7 @@
    [ "mattwalters5@gmail.com", "timisbusy@gmail.com" ],
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "homepage": "https://github.com/mateodelnorte/servicebus",
   "repository": {
     "type": "git",
