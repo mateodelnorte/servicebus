@@ -63,7 +63,7 @@ Bus.prototype.listen = function listen(queueName, options, callback) {
     self.queues[queueName].listen(callback, options);
   } else {
     self.connection.on('ready', function() {
-      self.log.debug('penis');
+      self.log.debug('on ready');
       process.nextTick(function() {
         self.initialized = true;
         self.listen(queueName, options, callback);
