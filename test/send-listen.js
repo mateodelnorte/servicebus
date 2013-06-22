@@ -1,6 +1,6 @@
 var noop = function () {};
-var log = { debug: noop, info: noop, warn: noop, error: noop };
-var bus = require('../bus/bus').bus({ log : log });
+var log = require('debug')('servicebus:test');
+var bus = require('../').bus();
 
 describe('servicebus', function(){
 
@@ -44,7 +44,7 @@ describe('servicebus', function(){
     });
 
     it('can handle high event throughput', function(done){
-      var count = 0, endCount = 10000;
+      var count = 0, endCount = 5000;
       function tryDone(){
         count++;
         if (count > endCount) {
@@ -58,7 +58,7 @@ describe('servicebus', function(){
         for(var i = 0; i <= endCount; ++i){
           bus.send('my.event.3', { my: 'event' });
         };
-      }, 10);
+      }, 100);
     });
 
     it('sends subsequent messages only after previous messages are acknowledged', function(done){
@@ -68,7 +68,7 @@ describe('servicebus', function(){
           done();
           clearInterval(interval);
         } else {
-          console.log('not done yet!');
+          log('not done yet!');
         }
       }, 10);
       bus.listen('my.event.4', { ack: true }, function (event, handle) {
@@ -93,7 +93,7 @@ describe('servicebus', function(){
           done();
           clearInterval(interval);
         } else {
-          console.log('not done yet!');
+          log('not done yet!');
         }
       }, 10);
       bus.listen('my.event.5', { ack: true }, function (event, handle) {

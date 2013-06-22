@@ -1,74 +1,8 @@
-var events = require('events'),
+var Correlator = require('./correlator'),
+    events = require('events'),
     newId = require('node-uuid').v4,
     Serializer = require('./serializer'),
     util = require('util');
-
-function QueueRegistry () {
-  this.serializer = new Serializer();
-  this.queues = {};
-}
-
-QueueRegistry.prototype.getCurrentQueues = function getCurrentQueues (callback) {
-  if ( ! this.queues || JSON.stringify(this.queues) === "{}") {
-    var self = this;
-    this.serializer.on('deserialized', function (queues) {
-      self.queues = queues;
-      callback(null, queues)
-    });
-    this.serializer.deserialize();
-  } else {
-    callback(null, this.queues);
-  }
-};
-
-QueueRegistry.prototype.setCurrentQueues = function setCurrentQueues (queues, callback) {
-  this.queues = queues;
-  this.serializer.serialize(queues, callback);
-}
-
-function Correlator () {
-  events.EventEmitter.call(this); 
-  var self = this;
-  this.ready = false;
-  this.registry = new QueueRegistry();
-  this.registry.getCurrentQueues(function (err, queues) {
-    self.ready = true;
-    self.emit('ready');
-  });
-}
-
-util.inherits(Correlator, events.EventEmitter);
-
-Correlator.prototype.getUniqueId = function getUniqueId (queueName, subscriptionId, callback) {
-  var id, 
-      self = this;
-  if ( ! subscriptionId) {
-    id = queueName + '.' + newId();
-    return callback(null, id);
-  }
-
-  function getIdFromQueueData () {
-    if( ! self.registry.queues[subscriptionId]) {
-      id = queueName + '.' + newId();
-      self.registry.queues[subscriptionId] = id;
-      self.registry.setCurrentQueues(self.registry.queues, function (err) {
-        if (err) callback(err);
-        else callback(null, id);
-      });
-    } else {
-      id = self.registry.queues[subscriptionId];
-      callback(null, id);
-    }
-  }
-
-  if (this.ready) {
-    getIdFromQueueData();
-  } else {
-    this.on('ready', function () {
-      getIdFromQueueData();
-    });
-  }
-};
 
 function PubSubQueue (connection, queueName, options) {
   this.connection = connection;
@@ -92,7 +26,7 @@ PubSubQueue.prototype.publish = function publish (event) {
       self.publish(event);
     });
   } else {
-    this.log.debug('publishing to exchange ' + self.exchange.name + ' ' + self.queueName + ' event ' + util.inspect(event));
+    this.log('publishing to exchange ' + self.exchange.name + ' ' + self.queueName + ' event ' + util.inspect(event));
     process.nextTick(function () {
       self.exchange.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
     });
@@ -104,13 +38,13 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
       uniqueName,
       queueOptions = options.queueOptions || {};
   
-  this.log.debug('queue options: ', queueOptions);
+  this.log('queue options: ', queueOptions);
 
   if (options && options.ack) {
     self.connection.queue(self.errorQueueName, queueOptions, function(q) {
       q.bind(self.exchange, self.errorQueueName);
       q.on('queueBindOk', function() {
-        self.log.debug('bound to ' + self.errorQueueName);  
+        self.log('bound to ' + self.errorQueueName);  
       });
     });
   }
@@ -121,7 +55,7 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
     self.connection.queue(uniqueName, queueOptions, function (q) {
       q.bind(self.exchange, self.queueName);
       q.on('queueBindOk', function() {
-        self.log.debug('subscribing to pubsub queue ' + uniqueName + 'on exchange' + self.exchange.name);
+        self.log('subscribing to pubsub queue ' + uniqueName + 'on exchange' + self.exchange.name);
         q.subscribe(options, function(message, headers, deliveryInfo, m){
           if (options && options.ack) {
             var handler = {
@@ -130,7 +64,7 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
               reject: function () {
                 var msgRejected = self.rejected[message.cid] || 0;
                 if (msgRejected >= self.maxRetries) {
-                  self.log.error(message);
+                  self.log(message);
                   m.acknowledge();
                   delete self.rejected[message.cid];
                 } else {

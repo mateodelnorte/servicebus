@@ -16,7 +16,7 @@ function Queue(connection, queueName, options) {
 util.inherits(Queue, events.EventEmitter);
 
 Queue.prototype.error = function error (event) {
-  this.log.error('Message moved to error queue: ' + this.errorQueueName);
+  this.log('Message moved to error queue: ' + this.errorQueueName);
   this.connection.publish(this.errorQueueName, event, { contentType: 'application/json', deliveryMode: 2 });
 };
 
@@ -30,7 +30,7 @@ Queue.prototype.listen = function listen (callback, options) {
     self.connection.queue(self.queueName + '.error', queueOptions, function(eq) {
       eq.bind(self.errorQueueName);
       eq.on('queueBindOk', function() {
-        self.log.info('bound to ' + self.errorQueueName);  
+        self.log('bound to ' + self.errorQueueName);  
       });
     });
   }
@@ -38,7 +38,7 @@ Queue.prototype.listen = function listen (callback, options) {
   var q = this.connection.queue(this.queueName, queueOptions, function() {
     q.bind(self.queueName);
     q.on('queueBindOk', function() {
-      self.log.debug('listening to queue', self.queueName);
+      self.log('listening to queue', self.queueName);
       q.subscribe(options, function(message, headers, deliveryInfo, m){
         if (options && options.ack) {
           var handler = {
@@ -69,7 +69,7 @@ Queue.prototype.listen = function listen (callback, options) {
 
 Queue.prototype.send = function send (event) {
   var self = this;
-  this.log.debug('sending to queue ' + this.queueName + ' event ' + util.inspect(event));
+  this.log('sending to queue ' + this.queueName + ' event ' + util.inspect(event));
   process.nextTick(function () {
     self.connection.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
   });

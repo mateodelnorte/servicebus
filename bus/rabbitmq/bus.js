@@ -1,20 +1,21 @@
-var util = require('util'),
-    amqp = require('amqp'),
+var amqp = require('amqp'),
+    log = require('debug')('servicebus'),
     events = require('events'),
+    newId = require('node-uuid'),
     PubSubQueue = require('./pubsubqueue'),
     Queue = require('./queue'),
-    newId = require('node-uuid');
+    util = require('util');
 
 function Bus(options, implOpts) {
   var noop = function () {};
   options = options || {}, implOpts, self = this;
   options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
   implOpts =  implOpts || { defaultExchangeName: 'amq.topic' };
-  this.log = options.log || { debug: noop, info: noop, warn: noop, error: noop };
+  this.log = options.log || log;
   
   this.delayOnStartup = options.delayOnStartup || 10;
   this.initialized = false;
-  this.log.debug('connecting to rabbitmq on ' + options.url);
+  log('connecting to rabbitmq on ' + options.url);
   this.connection = amqp.createConnection(options, implOpts);
   this.pubsubqueues = {};
   this.queues = {};
@@ -22,17 +23,17 @@ function Bus(options, implOpts) {
   var self = this;
 
   this.connection.on('error', function (err) {
-    self.log.error('Error connecting to rabbitmq at '  + options.url + ' error: ' + err.toString());
+    self.log('Error connecting to rabbitmq at '  + options.url + ' error: ' + err.toString());
     throw err;
   });
 
   this.connection.on('close', function (err) {
-    self.log.debug('rabbitmq connection closed.');
+    self.log('rabbitmq connection closed.');
   });
 
   this.connection.on('ready', function () {
     self.initialized = true;
-    self.log.debug("rabbitmq connected to " + self.connection.serverProperties.product);
+    self.log("rabbitmq connected to " + self.connection.serverProperties.product);
   });
 }
 
@@ -49,7 +50,7 @@ function packageEvent(queueName, message, cid) {
 
 Bus.prototype.listen = function listen(queueName, options, callback) {
   var self = this;
-  this.log.debug('calling listen dog: ', queueName);
+  log('calling listen dog: ', queueName);
   if (typeof options === "function") {
     callback = options;
     options = {};
@@ -57,13 +58,13 @@ Bus.prototype.listen = function listen(queueName, options, callback) {
 
   if (self.initialized) {
     if (self.queues[queueName] === undefined) {
-      this.log.debug('creating queue ' + queueName);
+      log('creating queue ' + queueName);
       self.queues[queueName] = new Queue(self.connection, queueName, { log: self.log });
     }
     self.queues[queueName].listen(callback, options);
   } else {
     self.connection.on('ready', function() {
-      self.log.debug('on ready');
+      self.log('on ready');
       process.nextTick(function() {
         self.initialized = true;
         self.listen(queueName, options, callback);
@@ -90,7 +91,7 @@ Bus.prototype._send = function send(queueName, message) {
       self._send(queueName, message);
     };
     var timeout = function(){
-      self.log.debug('timout triggered');
+      self.log('timout triggered');
       self.connection.removeListener('ready', resend);
       process.nextTick(resend);
     };
@@ -133,7 +134,7 @@ Bus.prototype._publish = function _publish(queueName, message, cid) {
   var self = this;
   if (self.initialized) {
     if (self.pubsubqueues[queueName] === undefined) {
-      this.log.debug('creating pubsub queue ' + queueName);
+      log('creating pubsub queue ' + queueName);
       self.pubsubqueues[queueName] = new PubSubQueue(self.connection, queueName, { log: self.log });
     }
     self.pubsubqueues[queueName].publish(message);
@@ -152,12 +153,4 @@ module.exports.bus = function bus (options, implOpts) {
   return new Bus(options, implOpts);
 };
 
-var namedBuses = {};
-
-module.exports.namedBus = function namedBus(name, options, implOpts) {
-  var bus = namedBuses[name];
-  if ( ! bus) {
-    bus = namedBuses[name] = new Bus(options, implOpts); 
-  }
-  return bus;
-}
+module.exports.Bus = Bus;

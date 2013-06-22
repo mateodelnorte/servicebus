@@ -1,7 +1,6 @@
 var cp = require('child_process');
 var noop = function () {};
-var log = { debug: noop, info: noop, warn: noop, error: noop };
-var bus = require('../bus/bus').bus({ log: log });
+var bus = require('../').bus();
 var should = require('should');
 
 describe('servicebus (child_processes)', function(){
