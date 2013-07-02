@@ -50,7 +50,7 @@ function packageEvent(queueName, message, cid) {
 
 Bus.prototype.listen = function listen(queueName, options, callback) {
   var self = this;
-  log('calling listen dog: ', queueName);
+  log('listen on queue ' + queueName);
   if (typeof options === "function") {
     callback = options;
     options = {};
@@ -64,7 +64,7 @@ Bus.prototype.listen = function listen(queueName, options, callback) {
     self.queues[queueName].listen(callback, options);
   } else {
     self.connection.on('ready', function() {
-      self.log('on ready');
+      self.log(queueName + ' ready');
       process.nextTick(function() {
         self.initialized = true;
         self.listen(queueName, options, callback);
