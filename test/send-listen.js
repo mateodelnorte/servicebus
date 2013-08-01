@@ -1,10 +1,11 @@
 var noop = function () {};
 var log = require('debug')('servicebus:test');
-var bus = require('../').bus();
+var bus = require('./bus-shim').bus;
+var util = require('util');
 
 describe('servicebus', function(){
 
-  describe('#send & #listen', function(){
+  describe('#send & #listen', function() {
 
     it('should cause message to be received by listen', function(done){
       bus.listen('my.event.1', function (event) {
@@ -68,7 +69,7 @@ describe('servicebus', function(){
           done();
           clearInterval(interval);
         } else {
-          log('not done yet!');
+          // log('not done yet!');
         }
       }, 10);
       bus.listen('my.event.4', { ack: true }, function (event, handle) {
@@ -88,17 +89,12 @@ describe('servicebus', function(){
   
     it('rejected messages should retry until max retries', function(done){
       var count = 0;
-      var interval = setInterval(function checkDone () {
-        if (count === 4) {
-          done();
-          clearInterval(interval);
-        } else {
-          log('not done yet!');
-        }
-      }, 10);
       bus.listen('my.event.5', { ack: true }, function (event, handle) {
         count++;
         handle.reject();
+        if (count === 4) {
+          done();
+        }
       });
       setTimeout(function () {
         bus.send('my.event.5', { my: 'event' });

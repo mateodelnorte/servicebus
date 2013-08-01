@@ -4,7 +4,7 @@ module.exports.bus = function bus (options, implOpts) {
   return rabbitmq.bus(options, implOpts);
 };
 
-var namedBuses = {};
+var namedBuses = {}, pipeline = [];
 
 module.exports.namedBus = function namedBus(name, options, implOpts) {
   var bus = namedBuses[name];

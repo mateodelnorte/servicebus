@@ -1,6 +1,6 @@
 var noop = function () {};
 var log = require('debug')('servicebus:test')
-var bus = require('../').bus();
+var bus = require('./bus-shim').bus;
 
 describe('servicebus', function(){
 

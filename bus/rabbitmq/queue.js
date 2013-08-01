@@ -69,7 +69,6 @@ Queue.prototype.listen = function listen (callback, options) {
 
 Queue.prototype.send = function send (event) {
   var self = this;
-  this.log('sending to queue ' + this.queueName + ' event ' + util.inspect(event));
   process.nextTick(function () {
     self.connection.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
   });
