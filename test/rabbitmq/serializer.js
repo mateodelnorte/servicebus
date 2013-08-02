@@ -1,5 +1,5 @@
 var fs = require('fs'),
-    Serializer = require('../bus/serializer'),
+    Serializer = require('../../bus/rabbitmq/serializer'),
     should = require('should');
 
 describe('Serializer', function(){
