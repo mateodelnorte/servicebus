@@ -87,20 +87,5 @@ describe('servicebus', function(){
       }, 100);
     });
   
-    it('rejected messages should retry until max retries', function (done){
-      var count = 0;
-      bus.subscribe('my.event.15', { ack: true }, function (event) {
-        count++;
-        log('received my.event.15 ' + count + ' times');
-        event.handle.reject();
-        if (count === 11) {
-          done();
-        } 
-      });
-      setTimeout(function () {
-        bus.publish('my.event.15', { my: 'event' });
-      }, 100);
-    });
-  
 	});
 });
