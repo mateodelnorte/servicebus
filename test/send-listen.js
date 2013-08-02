@@ -1,10 +1,11 @@
 var noop = function () {};
-var log = { debug: noop, info: noop, warn: noop, error: noop };
-var bus = require('../bus/bus').bus({ log : log });
+var log = require('debug')('servicebus:test');
+var bus = require('./bus-shim').bus;
+var util = require('util');
 
 describe('servicebus', function(){
 
-  describe('#send & #listen', function(){
+  describe('#send & #listen', function() {
 
     it('should cause message to be received by listen', function(done){
       bus.listen('my.event.1', function (event) {
@@ -44,7 +45,7 @@ describe('servicebus', function(){
     });
 
     it('can handle high event throughput', function(done){
-      var count = 0, endCount = 10000;
+      var count = 0, endCount = 5000;
       function tryDone(){
         count++;
         if (count > endCount) {
@@ -58,7 +59,7 @@ describe('servicebus', function(){
         for(var i = 0; i <= endCount; ++i){
           bus.send('my.event.3', { my: 'event' });
         };
-      }, 10);
+      }, 100);
     });
 
     it('sends subsequent messages only after previous messages are acknowledged', function(done){
@@ -68,12 +69,12 @@ describe('servicebus', function(){
           done();
           clearInterval(interval);
         } else {
-          console.log('not done yet!');
+          // log('not done yet!');
         }
       }, 10);
-      bus.listen('my.event.4', { ack: true }, function (event, handle) {
+      bus.listen('my.event.4', { ack: true }, function (event) {
         count++;
-        handle.ack();
+        event.handle.ack();
       });
       setTimeout(function () {
         //process.nextTick(function () {
@@ -83,25 +84,6 @@ describe('servicebus', function(){
           bus.send('my.event.4', { my: 'event' });
           bus.send('my.event.4', { my: 'event' });
         //});
-      }, 10);
-    });
-  
-    it('rejected messages should retry until max retries', function(done){
-      var count = 0;
-      var interval = setInterval(function checkDone () {
-        if (count === 4) {
-          done();
-          clearInterval(interval);
-        } else {
-          console.log('not done yet!');
-        }
-      }, 10);
-      bus.listen('my.event.5', { ack: true }, function (event, handle) {
-        count++;
-        handle.reject();
-      });
-      setTimeout(function () {
-        bus.send('my.event.5', { my: 'event' });
       }, 10);
     });
   
