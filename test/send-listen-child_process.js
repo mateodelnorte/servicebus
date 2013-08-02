@@ -7,7 +7,7 @@ describe('servicebus (child_processes)', function(){
 
   describe('#send & #listen', function(){
 
-    it('should cause message to be received by listen', function(done){
+    it('should cause message to be received by listen', function (done){
       var count = 0;
       function tryDone(){
         count++;
@@ -17,12 +17,12 @@ describe('servicebus (child_processes)', function(){
         }
       }
 
-      var sender = cp.fork(__dirname + '/child_processes/sender.js');
-
       bus.listen('event.22', function (event) {
         tryDone();
       }); 
 
+      var sender = cp.fork(__dirname + '/child_processes/.sender.js');
+      
     });
     
   });

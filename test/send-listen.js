@@ -72,9 +72,9 @@ describe('servicebus', function(){
           // log('not done yet!');
         }
       }, 10);
-      bus.listen('my.event.4', { ack: true }, function (event, handle) {
+      bus.listen('my.event.4', { ack: true }, function (event) {
         count++;
-        handle.ack();
+        event.handle.ack();
       });
       setTimeout(function () {
         //process.nextTick(function () {
@@ -87,18 +87,18 @@ describe('servicebus', function(){
       }, 10);
     });
   
-    it('rejected messages should retry until max retries', function(done){
+    it('rejected messages should retry until max retries', function (done){
       var count = 0;
-      bus.listen('my.event.5', { ack: true }, function (event, handle) {
+      bus.listen('my.event.5', { ack: true }, function (event) {
         count++;
-        handle.reject();
+        event.handle.reject();
         if (count === 4) {
           done();
         }
       });
       setTimeout(function () {
         bus.send('my.event.5', { my: 'event' });
-      }, 10);
+      }, 100);
     });
   
   });

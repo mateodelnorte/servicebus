@@ -11,7 +11,6 @@ function addCorrelationId (queueName, message, next) {
 
 module.exports = function () {
   return {
-    handleIncoming: addCorrelationId,
     handleOutgoing: addCorrelationId
   };
 } 

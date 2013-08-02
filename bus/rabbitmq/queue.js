@@ -1,13 +1,14 @@
 var events = require('events'),
     util = require('util');
 
-function Queue(connection, queueName, options) {
-  this.connection = connection;
-  this.errorQueueName = queueName + '.error';
+function Queue(options) {
+  this.bus = options.bus;
+  this.connection = options.connection;
+  this.errorQueueName = options.queueName + '.error';
   this.initialized = false;
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
-  this.queueName = queueName;
+  this.queueName = options.queueName;
   this.rejected = {};
 
   events.EventEmitter.call(this);
@@ -38,29 +39,12 @@ Queue.prototype.listen = function listen (callback, options) {
   var q = this.connection.queue(this.queueName, queueOptions, function() {
     q.bind(self.queueName);
     q.on('queueBindOk', function() {
-      self.log('listening to queue', self.queueName);
-      q.subscribe(options, function(message, headers, deliveryInfo, m){
-        if (options && options.ack) {
-          var handler = {
-            ack: function () { m.acknowledge(); },
-            acknowledge: function () { m.acknowledge(); },
-            reject: function () {
-              var msgRejected = self.rejected[message.cid] || 0;
-              if (msgRejected >= self.maxRetries) {
-                self.error(message);
-                m.acknowledge();
-                delete self.rejected[message.cid];
-              } else {
-                msgRejected++;
-                self.rejected[message.cid] = msgRejected;
-                m.reject(true);
-              }
-            }
-          };
-          callback(message, handler);
-        } else {
-          callback(message);
-        }
+      self.log('listening to queue ' + self.queueName + ' with options ' + util.inspect(options));
+      q.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
+        self.bus.handleIncoming(message, headers, deliveryInfo, messageHandle, options, function (message, headers, deliveryInfo, messageHandle, options) {
+           self.log('received ' + util.inspect(message));
+           callback(message, headers, deliveryInfo, messageHandle, options);
+        });
       });
       self.initialized = true;
     });

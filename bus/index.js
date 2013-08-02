@@ -1,7 +1,7 @@
 var rabbitmq = require('./rabbitmq/bus');
 
 module.exports.bus = function bus (options, implOpts) {
-  return rabbitmq.bus(options, implOpts);
+  return new rabbitmq.Bus(options, implOpts);
 };
 
 var namedBuses = {};

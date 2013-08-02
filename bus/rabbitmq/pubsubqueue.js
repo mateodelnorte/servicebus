@@ -4,16 +4,17 @@ var Correlator = require('./correlator'),
     Serializer = require('./serializer'),
     util = require('util');
 
-function PubSubQueue (connection, queueName, options) {
-  this.connection = connection;
+function PubSubQueue (options) {
+  this.bus = options.bus;
+  this.connection = options.connection;
   this.correlator = new Correlator();
-  this.errorQueueName = queueName + '.error';
+  this.errorQueueName = options.queueName + '.error';
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
-  this.queueName = queueName;
+  this.queueName = options.queueName;
   this.rejected = {}; 
   var self = this;
-  connection.exchange('amq.topic', { type: 'topic', durable: true, autoDelete: false }, function (exchange) {
+  this.connection.exchange('amq.topic', { type: 'topic', durable: true, autoDelete: false }, function (exchange) {
     self.exchange = exchange;
     self.connection.emit('readyToPublish');
   });
@@ -41,7 +42,7 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
   this.log('queue options: ', queueOptions);
 
   if (options && options.ack) {
-    self.connection.queue(self.errorQueueName, queueOptions, function(q) {
+    self.connection.queue(self.errorQueueName, queueOptions, function (q) {
       q.bind(self.exchange, self.errorQueueName);
       q.on('queueBindOk', function() {
         self.log('bound to ' + self.errorQueueName);  
@@ -56,28 +57,11 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
       q.bind(self.exchange, self.queueName);
       q.on('queueBindOk', function() {
         self.log('subscribing to pubsub queue ' + uniqueName + 'on exchange' + self.exchange.name);
-        q.subscribe(options, function(message, headers, deliveryInfo, m){
-          if (options && options.ack) {
-            var handler = {
-              ack: function () { m.acknowledge(); },
-              acknowledge: function () { m.acknowledge(); },
-              reject: function () {
-                var msgRejected = self.rejected[message.cid] || 0;
-                if (msgRejected >= self.maxRetries) {
-                  self.log(message);
-                  m.acknowledge();
-                  delete self.rejected[message.cid];
-                } else {
-                  msgRejected++;
-                  self.rejected[message.cid] = msgRejected;
-                  m.reject(true);
-                }
-              }
-            };
-            callback(message, handler);
-          } else {
-            callback(message);
-          }
+        q.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
+          self.bus.handleIncoming(message, headers, deliveryInfo, messageHandle, options, function (message, headers, deliveryInfo, messageHandle, options) {
+             self.log('received ' + util.inspect(message));
+             callback(message, headers, deliveryInfo, messageHandle, options);
+          });
         });
       });
     });

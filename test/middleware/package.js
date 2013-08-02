@@ -2,9 +2,10 @@ var noop = function () {};
 var log = require('debug')('servicebus:test')
 var bus = require('../bus-shim').bus;
 
-var pack = require('../../bus/middleware/package');
+// the following code is being used in the above shim
+// var pack = require('../../bus/middleware/package');
 
-bus.use(pack());
+// bus.use(pack());
 
 describe('package', function() {
 

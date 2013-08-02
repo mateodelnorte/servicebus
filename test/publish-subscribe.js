@@ -63,7 +63,7 @@ describe('servicebus', function(){
       }, 100);
     });
 
-    it('sends subsequent messages only after previous messages are acknowledged', function(done){
+    it('sends subsequent messages only after previous messages are acknowledged', function (done){
       var count = 0;
       var interval = setInterval(function checkDone () {
         if (count === 4) {
@@ -74,10 +74,10 @@ describe('servicebus', function(){
         //   console.log('not done yet!');
         // }
       }, 100);
-      bus.subscribe('my.event.14', { ack: true }, function (event, handle) {
+      bus.subscribe('my.event.14', { ack: true }, function (event) {
         count++;
         log('received my.event.14 ' + count + ' times');
-        handle.ack();
+        event.handle.ack();
       });
       setTimeout(function () {
         bus.publish('my.event.14', { my: 'event' });
@@ -87,21 +87,15 @@ describe('servicebus', function(){
       }, 100);
     });
   
-    it('rejected messages should retry until max retries', function(done){
+    it('rejected messages should retry until max retries', function (done){
       var count = 0;
-      var interval = setInterval(function checkDone () {
-        if (count === 4) {
-          done();
-          clearInterval(interval);
-        } 
-        // else {
-        //   console.log('not done yet!');
-        // }
-      }, 100);
-      bus.subscribe('my.event.15', { ack: true }, function (event, handle) {
+      bus.subscribe('my.event.15', { ack: true }, function (event) {
         count++;
         log('received my.event.15 ' + count + ' times');
-        handle.reject();
+        event.handle.reject();
+        if (count === 11) {
+          done();
+        } 
       });
       setTimeout(function () {
         bus.publish('my.event.15', { my: 'event' });
