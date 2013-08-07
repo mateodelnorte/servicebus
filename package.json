@@ -13,7 +13,7 @@
     "url": "git://github.com/mateodelnorte/servicebus.git"
   },
   "engines": {
-    "node": "~0.6.x"
+    "node": "<0.10.15"
   },
   "dependencies": {
     "amqp": "0.1.3",
