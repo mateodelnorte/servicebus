@@ -70,4 +70,9 @@ Bus.prototype.handleOutgoing = function (queueName, message, callback) {
   next(null, queueName, message);
 }
 
+Bus.prototype.correlate = require('./middleware/correlate');
+Bus.prototype.log = require('./middleware/log');
+Bus.prototype.package = require('./middleware/package');
+Bus.prototype.retry = require('./middleware/retry');
+
 module.exports = Bus;

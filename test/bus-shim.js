@@ -5,13 +5,11 @@ if ( ! process.env.RABBITMQ_URL)
 
 var busUrl = process.env.RABBITMQ_URL
 
-var bus = require('../').bus({ url: busUrl }),
-    correlate = require('../bus/middleware/correlate'),
-    pack = require('../bus/middleware/package'),
-    retry = require('../bus/middleware/retry');
+var bus = require('../').bus({ url: busUrl });
 
-bus.use(pack());
-bus.use(correlate());
-bus.use(retry());
+bus.use(bus.package());
+bus.use(bus.correlate());
+bus.use(bus.log());
+bus.use(bus.retry());
 
 module.exports.bus = bus;

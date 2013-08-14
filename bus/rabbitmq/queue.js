@@ -42,7 +42,6 @@ Queue.prototype.listen = function listen (callback, options) {
       self.log('listening to queue ' + self.queueName + ' with options ' + util.inspect(options));
       q.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
         self.bus.handleIncoming(message, headers, deliveryInfo, messageHandle, options, function (message, headers, deliveryInfo, messageHandle, options) {
-           self.log('received ' + util.inspect(message));
            callback(message, headers, deliveryInfo, messageHandle, options);
         });
       });

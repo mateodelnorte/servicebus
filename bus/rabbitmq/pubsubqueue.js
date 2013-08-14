@@ -59,7 +59,6 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
         self.log('subscribing to pubsub queue ' + uniqueName + 'on exchange' + self.exchange.name);
         q.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
           self.bus.handleIncoming(message, headers, deliveryInfo, messageHandle, options, function (message, headers, deliveryInfo, messageHandle, options) {
-             self.log('received ' + util.inspect(message));
              callback(message, headers, deliveryInfo, messageHandle, options);
           });
         });
