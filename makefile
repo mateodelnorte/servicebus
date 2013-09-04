@@ -9,4 +9,4 @@ test-debug:
 	-rm .queues
 	RABBITMQ_URL=$(RABBITMQ_URL) DEBUG=$(DEBUG) ./node_modules/.bin/mocha -R spec -t 30000 --recursive
 
-.PHONY: test
+.PHONY: test test-debug
