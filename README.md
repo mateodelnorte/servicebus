@@ -57,3 +57,63 @@
     setInterval(function () {
       bus.publish('my.event', { my: 'event' });
     }, 1000);
+
+# Middleware
+
+Servicebus allows for middleware packages to enact behavior at the time a message is sent or received. Middleware may defined one or two functions to modify incoming or outgoing messages:
+
+```
+...
+
+  function logIncoming (queueName, message, next) {
+    log('received ' + util.inspect(message));
+    next(null, queueName, message);
+  }
+
+  function logOutgoing (message, headers, deliveryInfo, messageHandle, options, next) {    
+    log('sending ' + util.inspect(message));
+    next(null, message, headers, deliveryInfo, messageHandle, options);
+  }
+
+  return {
+    handleIncoming: logIncoming,
+    handleOutgoing: logOutgoing
+  };
+```
+
+handleIncoming pipelines behavior to be enacted on an incoming message. handleOutgoing pipelines behavior to be enacted on an outgoing message. To say that the behavior is pipelined is to say that each middleware is called in succession, allowing each to enact its behavior before the next. (in from protocol->servicebus->middleware 1->middleware 2->servicebus->user code)
+
+## Included Middleware
+
+### Correlate
+
+Correlate simply adds a .cid (Correlation Identity) property to any outgoing message that doesn't already have one. This is useful for following messages in logs across services.
+
+### Log
+
+Log ensures that incoming and outgoing messages are logged to stdout via the debug module.
+
+### Package
+
+Package repackages outgoing messages, encapsulating the original message as a .data property and adding additional properties for information like message type and datetime sent: 
+
+```
+  // bus.publish('my:event', { my: 'event' });
+  {
+    my: 'event'
+  };
+```
+becomes
+```
+  {
+    data: {
+      my: 'event'
+    }
+    , datetime: 'Wed, 04 Sep 2013 19:31:11 GMT'
+    , type: 'my:event'
+  };
+```
+
+### Retry
+
+Retry provides ability to specify a max number of times an erroring message will be retried before being placed on an error queue. 
