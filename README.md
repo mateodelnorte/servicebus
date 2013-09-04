@@ -134,4 +134,4 @@ becomes
 
 ### Retry
 
-Retry provides ability to specify a max number of times an erroring message will be retried before being placed on an error queue. 
+Retry provides ability to specify a max number of times an erroring message will be retried before being placed on an error queue. The retry middleware requires the correlate middleware. 
