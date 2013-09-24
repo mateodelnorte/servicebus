@@ -23,6 +23,52 @@
         <!-- <section data-markdown="README.md" data-separator="^\n\n\n" data-vertical="^\n\n" data-notes="^Note:" data-charset="iso-8859-15"></section> -->
         <section data-markdown data-separator="^\n---\n$" data-vertical="^\n--\n$">
           <script type="text/template">
+            # Building a Distributed System in Node, quick!
+
+            by Matt Walters
+
+
+            ---
+
+            ## defined:
+
+                dis·trib·ut·ed sys·tem
+                noun
+                plural noun: distributed systems
+                1. a number of independent computers linked by a network.
+
+
+            --
+
+            ### a little more:
+
+                A distributed system consists of a collection of autonomous computers 
+                linked by a computer network and equipped with distributed system software. 
+                This software enables computers to coordinate their activities and to share 
+                the resources of the system hardware, software, and data.
+
+            --
+
+            ### many examples
+
+              - job queue - provides a queued store of work from which applications can operate
+              - message broker - routes messages between applications
+              - peer to peer - decentralized nodes act as both clients and servers
+
+
+            --
+
+            ### in the real world
+
+              - database clustering
+              - file sharing networks (bittorrent)
+              - Amazon, Facebook, Twitter - everybody big
+
+
+              \* distributed systems are key to scaling computing and many businesses
+
+            ---
+
             ## <img src="rabbitmq.png"></img>
 
             - Robust messaging for applications
@@ -40,8 +86,66 @@
             - sudo apt-get install rabbitmq-server // ubuntu
             - yum install rabbitmq-server-3.1.5-1.noarch.rpm // centos
 
+
+            --
+
+              Direct send
+
+                <img src="send.png" width="180">
+
+              Round Robin / Work Queues
+
+                <img src="round-robin.png" width="180">
+
+              Pub Sub
+
+                <img src="pubsub.png" width="180">
+
+              Topic Routing
+
+                <img src="topicrouting.png" width="180">
+
+              \* & more
+
+
             ---
 
+            <img src="node.png"></img>
+
+                  var http = require('http');
+                  http.createServer(function (req, res) {
+                    res.writeHead(200, {'Content-Type': 'text/plain'});
+                    res.end('Hello World\n');
+                  }).listen(1337, '127.0.0.1');
+                  console.log('Server running at http://127.0.0.1:1337/');
+
+
+            --
+
+            <img src="railsvsnode.png"></img>
+
+
+            --
+
+            ## supported by everybody
+
+              - Joyent
+              - Amazon
+              - Heroku
+              - Azure <--- Microsoft!!!*
+
+              \* Microsoft actually donates a human resource to the node-core team
+              to ensure it runs well on Windows and Azure
+
+
+            --
+
+            # download and go!
+
+              http://nodejs.org/download/
+
+
+            ---
 
             # servicebus
 
@@ -50,15 +154,14 @@
                   npm http 304 https://registry.npmjs.org/servicebus
 
                   { name: 'servicebus',
-                    description: 'Simple service bus for sending events between processes using 
-                    amqp.',
+                    description: 'Simple service bus for sending events between processes using amqp.',
                     'dist-tags': { latest: '0.2.0' },
                     versions:
                      [ '0.0.1',
                        '0.0.2',
-                       ...
 
-            ---
+
+            --
 
             ## Sending and Receiving
 
