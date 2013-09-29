@@ -134,7 +134,7 @@ RabbitMQBus.prototype.publish = function publish (queueName, message) {
   } else {
     var republish = function() {
       self.initialized = true;
-      self._publish(queueName, message);
+      self.publish(queueName, message);
     };
     self.connection.on('ready', function() {
       process.nextTick(republish);
