@@ -27,7 +27,7 @@ describe('servicebus', function(){
         bus.should.have.property('namespace', 'my.namespace:');
         setTimeout(function () {
           bus.send(queueName, { test: 'object' });
-        }, 100);
+        }, 100); // this is required because the queue is already initialized under the name provided, because we're listening. this would not be an issue when sending between two processes. 
       });
     });
 
