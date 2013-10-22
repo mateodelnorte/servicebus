@@ -9,7 +9,7 @@ var namedBuses = {};
 module.exports.namedBus = function namedBus(name, options, implOpts) {
   var bus = namedBuses[name];
   if ( ! bus) {
-    namedBuses[name] = new rabbitmq.Bus(named, options, implOpts);
+    bus = namedBuses[name] = new rabbitmq.Bus(options, implOpts);
   }
   return bus;
 }

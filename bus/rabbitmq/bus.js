@@ -13,15 +13,16 @@ function RabbitMQBus(options, implOpts) {
   options = options || {}, implOpts, self = this;
   options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
   
-  implOpts =  implOpts || { defaultExchangeName: 'amq.topic' };
-  
-  this.log = options.log || log;
   this.delayOnStartup = options.delayOnStartup || 10;
   this.initialized = false;
+  this.log = options.log || log;
+  this.namespace = options.namespace || process.env.SERVICEBUS_NAMESPACE || '';
   this.pubsubqueues = {};
   this.queues = {};
 
   log('connecting to rabbitmq on ' + options.url);
+
+  implOpts =  implOpts || { defaultExchangeName: 'amq.topic' };
   
   this.connection = amqp.createConnection(options, implOpts);
 
@@ -47,13 +48,18 @@ util.inherits(RabbitMQBus, Bus);
 
 RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
   var self = this;
+  
   log('listen on queue ' + queueName);
+  
   if (typeof options === "function") {
     callback = options;
     options = {};
   }
 
   if (self.initialized) {
+
+    queueName = this.namespace + queueName;
+
     if (self.queues[queueName] === undefined) {
       log('creating queue ' + queueName);
       self.queues[queueName] = new Queue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
@@ -72,7 +78,11 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
 
 RabbitMQBus.prototype.send = function send (queueName, message) {
   var self = this;
+
   if (self.initialized) {
+
+    queueName = this.namespace + queueName;
+
     if (self.queues[queueName] === undefined) {
       self.queues[queueName] = new Queue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
     }
@@ -105,7 +115,11 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
     callback = options;
     options = {};
   }
+
   if (self.initialized) {
+    
+    queueName = this.namespace + queueName;
+
     if (self.pubsubqueues[queueName] === undefined) {
       self.pubsubqueues[queueName] = new PubSubQueue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
     }
@@ -122,7 +136,11 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
 
 RabbitMQBus.prototype.publish = function publish (queueName, message) {
   var self = this;
+
   if (self.initialized) {
+
+    queueName = this.namespace + queueName;
+    
     if (self.pubsubqueues[queueName] === undefined) {
       log('creating pubsub queue ' + queueName);
       self.pubsubqueues[queueName] = new PubSubQueue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
