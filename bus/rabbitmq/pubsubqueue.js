@@ -42,6 +42,8 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
   this.log('queue options: ', queueOptions);
 
   if (options && options.ack) {
+    queueOptions.durable = true;
+    queueOptions.autoDelete = false;
     self.connection.queue(self.errorQueueName, queueOptions, function (q) {
       q.bind(self.exchange, self.errorQueueName);
       q.on('queueBindOk', function() {

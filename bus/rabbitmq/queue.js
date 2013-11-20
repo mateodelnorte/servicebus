@@ -28,6 +28,8 @@ Queue.prototype.listen = function listen (callback, options) {
   var self = this;
 
   if (options && options.ack) {
+    queueOptions.durable = true;
+    queueOptions.autoDelete = false;
     self.connection.queue(self.queueName + '.error', queueOptions, function(eq) {
       eq.bind(self.errorQueueName);
       eq.on('queueBindOk', function() {
