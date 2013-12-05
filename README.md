@@ -29,6 +29,8 @@
 
 ## Message Acknowledgement
 
+  (Note: message acking requires use of the retry() middleware, referenced below below)
+
   Servicebus integrates with RabbitMQ's message acknowledement functionality, which causes messages to queue instead of sending until the listening processes marks any previously received message as acknowledged or rejected. Messages can be acknowledged or rejected with the following syntax. To use ack and reject, it must be specified when defining the listening function: 
 
     bus.listen('my.event', { ack: true }, function (event) {
