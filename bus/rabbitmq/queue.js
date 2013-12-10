@@ -31,7 +31,11 @@ Queue.prototype.listen = function listen (callback, options) {
     queueOptions.durable = true;
     queueOptions.autoDelete = false;
     self.connection.queue(self.queueName + '.error', queueOptions, function(eq) {
-      eq.bind(self.errorQueueName);
+      if ( queueOptions.routingKey ){
+        eq.bind(queueOptions.routingKey);
+      }else {
+        eq.bind(self.errorQueueName);
+      }
       eq.on('queueBindOk', function() {
         self.log('bound to ' + self.errorQueueName);  
       });
@@ -39,7 +43,11 @@ Queue.prototype.listen = function listen (callback, options) {
   }
   
   var q = this.connection.queue(this.queueName, queueOptions, function() {
-    q.bind(self.queueName);
+    if ( queueOptions.routingKey ){
+      q.bind(queueOptions.routingKey);
+    }else {
+      q.bind(self.queueName);
+    }
     q.on('queueBindOk', function() {
       self.log('listening to queue ' + self.queueName + ' with options ' + util.inspect(options));
       q.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
