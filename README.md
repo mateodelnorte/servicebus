@@ -59,6 +59,19 @@
     setInterval(function () {
       bus.publish('my.event', { my: 'event' });
     }, 1000);
+    
+# Topic Routing
+
+  To use topic routing to accept multiple events in a single handler, use publish and subscribe and the following syntax:
+  
+  ```
+  bus.publish('event.one', { event: 'one' });
+  bus.publish('event.two', { event: 'two' });
+  ```
+  and for the listener...
+  ```
+  bus.subscribe('event.*', function (msg) ...
+  ```
 
 # Middleware
 
