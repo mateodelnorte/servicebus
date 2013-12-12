@@ -12,6 +12,7 @@ function RabbitMQBus(options, implOpts) {
 
   options = options || {}, implOpts, self = this;
   options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
+  options.vhost = options.vhost || process.env.RABBITMQ_VHOST || '/';
   
   this.delayOnStartup = options.delayOnStartup || 10;
   this.initialized = false;
