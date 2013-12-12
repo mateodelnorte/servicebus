@@ -22,7 +22,7 @@ function RabbitMQBus(options, implOpts) {
 
   log('connecting to rabbitmq on ' + options.url);
 
-  implOpts =  implOpts || { defaultExchangeName: 'amq.topic' };
+  implOpts =  implOpts || { defaultExchangeName: '' };
   
   this.connection = amqp.createConnection(options, implOpts);
 
