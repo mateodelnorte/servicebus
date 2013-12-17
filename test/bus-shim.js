@@ -9,7 +9,7 @@ var bus = require('../').bus({ url: busUrl });
 
 bus.use(bus.package());
 bus.use(bus.correlate());
-bus.use(bus.log());
+bus.use(bus.logger());
 bus.use(bus.retry());
 
 module.exports.bus = bus;

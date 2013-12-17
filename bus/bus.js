@@ -1,15 +1,16 @@
 function Bus () {
-  this.middleware = [];
+  this.incomingMiddleware = [];
+  this.outgoingMiddleware = [];
 }
 
 Bus.prototype.use = function (middleware) {
-  this.middleware.push(middleware);
+  if (middleware.handleIncoming) this.incomingMiddleware.push(middleware.handleIncoming);
+  if (middleware.handleOutgoing) this.outgoingMiddleware.push(middleware.handleOutgoing);
   return this;
 }
 
-
 Bus.prototype.handleIncoming = function (message, headers, deliveryInfo, messageHandle, options, callback) {
-  var stack = this.middleware, index = this.middleware.length - 1;
+  var stack = this.incomingMiddleware, index = this.incomingMiddleware.length - 1;
 
   function next (err) {
 
@@ -24,25 +25,19 @@ Bus.prototype.handleIncoming = function (message, headers, deliveryInfo, message
 
     layer = stack[index--];
 
-    if ( ! layer) {
+    if ( undefined === layer) {
       return callback(message, headers, deliveryInfo, messageHandle, options);
-    }
-
-    if (layer.handleIncoming) {
-      layer.handleIncoming(message, headers, deliveryInfo, messageHandle, options, next);
     } else {
-      next(null, message, headers, deliveryInfo, messageHandle, options);
+      layer(message, headers, deliveryInfo, messageHandle, options, next);
     }
-
   }
 
   next();
 }
 
-
 Bus.prototype.handleOutgoing = function (queueName, message, callback) {
   
-  var stack = this.middleware, index = 0;
+  var stack = this.outgoingMiddleware, index = 0;
 
   function next (err) {
 
@@ -56,22 +51,18 @@ Bus.prototype.handleOutgoing = function (queueName, message, callback) {
 
     index++;
 
-    if ( ! layer) {
+    if ( undefined === layer) {
       return callback(queueName, message);
-    }
-
-    if (layer.handleOutgoing) {
-      layer.handleOutgoing(queueName, message, next);
-    } else {
-      next(null, queueName, message);
-    }
+    } else  {
+      layer(queueName, message, next);
+    } 
   }
 
   next(null, queueName, message);
 }
 
 Bus.prototype.correlate = require('./middleware/correlate');
-Bus.prototype.log = require('./middleware/log');
+Bus.prototype.logger = require('./middleware/logger');
 Bus.prototype.package = require('./middleware/package');
 Bus.prototype.retry = require('./middleware/retry');
 
