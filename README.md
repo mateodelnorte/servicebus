@@ -122,9 +122,9 @@ handleIncoming pipelines behavior to be enacted on an incoming message. handleOu
 
 Correlate simply adds a .cid (Correlation Identity) property to any outgoing message that doesn't already have one. This is useful for following messages in logs across services.
 
-### Log
+### Logger
 
-Log ensures that incoming and outgoing messages are logged to stdout via the debug module.
+Logger ensures that incoming and outgoing messages are logged to stdout via the debug module. (Use this in non-high throughput scenarios, otherwise you'll have some very quickly growing logs)
 
 ### Package
 
