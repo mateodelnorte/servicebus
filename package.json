@@ -6,7 +6,7 @@
   ],
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "homepage": "https://github.com/mateodelnorte/servicebus",
   "repository": {
     "type": "git",
@@ -16,7 +16,7 @@
     "node": "0.6 || 0.8 || 0.9 || 0.10"
   },
   "dependencies": {
-    "amqp": "0.1.7",
+    "amqp": "0.1.8",
     "node-uuid": "1.4.0",
     "debug": "~0.7.2"
   },
