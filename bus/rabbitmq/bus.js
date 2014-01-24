@@ -41,8 +41,8 @@ function RabbitMQBus(options, implOpts) {
 
   }).catch(Promise.CancellationError, function (err) {
     self.log('Error connecting to rabbitmq at '  + options.url + ' error: ' + err.toString());
+    throw err;
   });
-
 
   Bus.call(this);
 }
@@ -61,6 +61,7 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
   }
 
   this.initialized.done(function() {
+
     if (self.queues[queueName] === undefined) {
       log('creating queue ' + queueName);
       self.queues[queueName] = new Queue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
@@ -95,8 +96,8 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
   }
   
   this.initialized.done(function() {
-
-    if (self.pubsubqueues[queueName] === undefined) {
+    
+  if (self.pubsubqueues[queueName] === undefined) {
       self.pubsubqueues[queueName] = new PubSubQueue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
     }
     self.pubsubqueues[queueName].subscribe(callback, options);

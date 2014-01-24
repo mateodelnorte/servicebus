@@ -1,7 +1,7 @@
 require('longjohn')
 
 if ( ! process.env.RABBITMQ_URL)
-  throw new Error('Tests require a RABBITMQ_URL environment variable to be set, pointing to the RabbiqMQ instance you wish to use.');
+  throw new Error('Tests require a RABBITMQ_URL environment variable to be set, pointing to the RabbiqMQ instance you wish to use. Example url: "amqp://localhost:5672"');
 
 var busUrl = process.env.RABBITMQ_URL
 
