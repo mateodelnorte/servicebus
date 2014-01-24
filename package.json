@@ -2,7 +2,8 @@
   "author": "Matt Walters <mattwalters5@gmail.com>",
   "contributors": [
     "mattwalters5@gmail.com",
-    "timisbusy@gmail.com"
+    "timisbusy@gmail.com",
+    "mail@chrisabrams.com"
   ],
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
@@ -18,7 +19,8 @@
   "dependencies": {
     "amqp": "0.1.8",
     "node-uuid": "1.4.0",
-    "debug": "~0.7.2"
+    "debug": "~0.7.2",
+    "bluebird": "~1.0.0"
   },
   "devDependencies": {
     "longjohn": "~0.2.0",
