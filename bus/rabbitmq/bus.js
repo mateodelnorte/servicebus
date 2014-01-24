@@ -4,6 +4,7 @@ var amqp = require('amqp'),
     events = require('events'),
     newId = require('node-uuid'),
     PubSubQueue = require('./pubsubqueue'),
+    Q = require('q'),
     Queue = require('./queue'),
     util = require('util');
 
@@ -15,7 +16,6 @@ function RabbitMQBus(options, implOpts) {
   options.vhost = options.vhost || process.env.RABBITMQ_VHOST || '/';
   
   this.delayOnStartup = options.delayOnStartup || 10;
-  this.initialized = false;
   this.log = options.log || log;
   this.pubsubqueues = {};
   this.queues = {};
@@ -35,9 +35,12 @@ function RabbitMQBus(options, implOpts) {
     self.log('rabbitmq connection closed.');
   });
 
+  var initialize = Q.defer()
+  this.initialize = initialize.promise;
+
   this.connection.on('ready', function () {
-    self.initialized = true;
     self.log("rabbitmq connected to " + self.connection.serverProperties.product);
+    initialize.resolve();
   });
 
   Bus.call(this);
@@ -56,28 +59,20 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
     options = {};
   }
 
-  if (self.initialized) {
-
+  this.initialize.done(function() {
     if (self.queues[queueName] === undefined) {
       log('creating queue ' + queueName);
       self.queues[queueName] = new Queue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
     }
     self.queues[queueName].listen(callback, options);
-  } else {
-    self.connection.on('ready', function() {
-      self.log(queueName + ' ready');
-      process.nextTick(function() {
-        self.initialized = true;
-        self.listen(queueName, options, callback);
-      });
-    });
-  }
+  });
+
 };
 
 RabbitMQBus.prototype.send = function send (queueName, message) {
   var self = this;
 
-  if (self.initialized) {
+  this.initialize.done(function() {
 
     if (self.queues[queueName] === undefined) {
       self.queues[queueName] = new Queue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
@@ -86,22 +81,8 @@ RabbitMQBus.prototype.send = function send (queueName, message) {
       log('sending to queue ' + queueName + ' event ' + util.inspect(message));
       self.queues[queueName].send(message);
     });
-  } else {
-    var resend = function() {
-      self.initialized = true;
-      self.send(queueName, message);
-    };
-    var timeout = function(){
-      self.log('timout triggered');
-      self.connection.removeListener('ready', resend);
-      process.nextTick(resend);
-    };
-    var timeoutId = setTimeout(timeout, self.delayOnStartup);
-    self.connection.on('ready', function() {
-      clearTimeout(timeoutId);
-      process.nextTick(resend);
-    });
-  }
+
+  });
 };
 
 RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callback) {
@@ -111,27 +92,20 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
     callback = options;
     options = {};
   }
-
-  if (self.initialized) {
-    
+  
+  this.initialize.done(function() {
     if (self.pubsubqueues[queueName] === undefined) {
       self.pubsubqueues[queueName] = new PubSubQueue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
     }
-    self.pubsubqueues[queueName].subscribe(callback, options); 
-  } else {
-    self.connection.on('ready', function() {
-      process.nextTick(function() {
-        self.initialized = true;
-        self.subscribe(queueName, options, callback);
-      });
-    });
-  }
+    self.pubsubqueues[queueName].subscribe(callback, options);
+  });
+
 };
 
 RabbitMQBus.prototype.publish = function publish (queueName, message) {
   var self = this;
 
-  if (self.initialized) {
+  this.initialize.done(function() {
     
     if (self.pubsubqueues[queueName] === undefined) {
       log('creating pubsub queue ' + queueName);
@@ -141,15 +115,9 @@ RabbitMQBus.prototype.publish = function publish (queueName, message) {
       log('sending to queue ' + queueName + ' event ' + util.inspect(message));
       self.pubsubqueues[queueName].publish(message);
     });
-  } else {
-    var republish = function() {
-      self.initialized = true;
-      self.publish(queueName, message);
-    };
-    self.connection.on('ready', function() {
-      process.nextTick(republish);
-    });
-  }
+
+  });
+
 };
 
 module.exports.Bus = RabbitMQBus;
