@@ -20,7 +20,7 @@
     "amqp": "0.1.8",
     "node-uuid": "1.4.0",
     "debug": "~0.7.2",
-    "q": "1.0.0"
+    "bluebird": "~1.0.0"
   },
   "devDependencies": {
     "longjohn": "~0.2.0",

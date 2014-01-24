@@ -4,7 +4,7 @@ var amqp = require('amqp'),
     events = require('events'),
     newId = require('node-uuid'),
     PubSubQueue = require('./pubsubqueue'),
-    Q = require('q'),
+    Promise = require('bluebird'),
     Queue = require('./queue'),
     util = require('util');
 
@@ -26,21 +26,22 @@ function RabbitMQBus(options, implOpts) {
   
   this.connection = amqp.createConnection(options, implOpts);
 
-  this.connection.on('error', function (err) {
-    self.log('Error connecting to rabbitmq at '  + options.url + ' error: ' + err.toString());
-    throw err;
-  });
-
   this.connection.on('close', function () {
     self.log('rabbitmq connection closed.');
   });
 
-  var initialize = Q.defer()
-  this.initialize = initialize.promise;
+  this.initialized = new Promise(function (resolve, reject) {
+    
+    self.connection.on('error', reject);
 
-  this.connection.on('ready', function () {
-    self.log("rabbitmq connected to " + self.connection.serverProperties.product);
-    initialize.resolve();
+    self.connection.on('ready', function () {
+      self.log("rabbitmq connected to " + self.connection.serverProperties.product);
+      resolve();
+    });
+
+  }).catch(Promise.CancellationError, function (err) {
+    self.log('Error connecting to rabbitmq at '  + options.url + ' error: ' + err.toString());
+    throw err;
   });
 
   Bus.call(this);
@@ -59,7 +60,8 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
     options = {};
   }
 
-  this.initialize.done(function() {
+  this.initialized.done(function() {
+
     if (self.queues[queueName] === undefined) {
       log('creating queue ' + queueName);
       self.queues[queueName] = new Queue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
@@ -72,7 +74,7 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
 RabbitMQBus.prototype.send = function send (queueName, message) {
   var self = this;
 
-  this.initialize.done(function() {
+  this.initialized.done(function() {
 
     if (self.queues[queueName] === undefined) {
       self.queues[queueName] = new Queue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
@@ -93,11 +95,13 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
     options = {};
   }
   
-  this.initialize.done(function() {
-    if (self.pubsubqueues[queueName] === undefined) {
+  this.initialized.done(function() {
+    
+  if (self.pubsubqueues[queueName] === undefined) {
       self.pubsubqueues[queueName] = new PubSubQueue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
     }
     self.pubsubqueues[queueName].subscribe(callback, options);
+
   });
 
 };
@@ -105,7 +109,7 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
 RabbitMQBus.prototype.publish = function publish (queueName, message) {
   var self = this;
 
-  this.initialize.done(function() {
+  this.initialized.done(function() {
     
     if (self.pubsubqueues[queueName] === undefined) {
       log('creating pubsub queue ' + queueName);
