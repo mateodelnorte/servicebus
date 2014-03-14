@@ -10,7 +10,8 @@ Bus.prototype.use = function (middleware) {
 }
 
 Bus.prototype.handleIncoming = function (message, headers, deliveryInfo, messageHandle, options, callback) {
-  var stack = this.incomingMiddleware, index = this.incomingMiddleware.length - 1;
+  var index = this.incomingMiddleware.length - 1;
+  var self = this;
 
   function next (err) {
 
@@ -23,12 +24,12 @@ Bus.prototype.handleIncoming = function (message, headers, deliveryInfo, message
     messageHandle = (args.length > 1) ? args[3] : messageHandle;
     options = (args.length > 1) ? args[3] : options;
 
-    layer = stack[index--];
+    layer = self.incomingMiddleware[index--];
 
     if ( undefined === layer) {
       return callback(message, headers, deliveryInfo, messageHandle, options);
     } else {
-      layer(message, headers, deliveryInfo, messageHandle, options, next);
+      layer.call(self, message, headers, deliveryInfo, messageHandle, options, next);
     }
   }
 
@@ -37,7 +38,8 @@ Bus.prototype.handleIncoming = function (message, headers, deliveryInfo, message
 
 Bus.prototype.handleOutgoing = function (queueName, message, callback) {
   
-  var stack = this.outgoingMiddleware, index = 0;
+  var index = 0;
+  var self = this;
 
   function next (err) {
 
@@ -47,14 +49,14 @@ Bus.prototype.handleOutgoing = function (queueName, message, callback) {
     queueName = (args.length > 1) ? args[0] : queueName;
     message = (args.length > 1) ? args[1] : message;
 
-    layer = stack[index];
+    layer = self.outgoingMiddleware[index];
 
     index++;
 
     if ( undefined === layer) {
       return callback(queueName, message);
     } else  {
-      layer(queueName, message, next);
+      layer.call(self, queueName, message, next);
     } 
   }
 
