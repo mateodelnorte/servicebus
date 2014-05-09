@@ -17,7 +17,9 @@ describe('retry', function() {
         count++;
         event.handle.reject();
         if (count === 4) {
-          done();
+          bus.destroyListener('my.event.5').on('success', function () {
+            done();
+          });
         }
       });
       setTimeout(function () {

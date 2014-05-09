@@ -64,21 +64,22 @@ describe('servicebus', function(){
     });
 
     it('sends subsequent messages only after previous messages are acknowledged', function (done){
-      var count = 0;
+      var count = 0, subscriptions = [];
       var interval = setInterval(function checkDone () {
         if (count === 4) {
           done();
           clearInterval(interval);
+          subscriptions.forEach(function (subscription) {
+            subscription.unsubscribe();
+          });
         } 
-        //else {
-        //   console.log('not done yet!');
-        // }
       }, 100);
-      bus.subscribe('my.event.14', { ack: true }, function (event) {
+      var subscription = bus.subscribe('my.event.14', { ack: true }, function (event) {
         count++;
         log('received my.event.14 ' + count + ' times');
         event.handle.ack();
       });
+      subscriptions.push(subscription);
       setTimeout(function () {
         bus.publish('my.event.14', { my: 'event' });
         bus.publish('my.event.14', { my: 'event' });

@@ -2,6 +2,7 @@ var amqp = require('amqp'),
     Bus = require('../bus'),
     log = require('debug')('servicebus'),
     events = require('events'),
+    extend = require('extend'),
     newId = require('node-uuid'),
     PubSubQueue = require('./pubsubqueue'),
     Promise = require('bluebird'),
@@ -71,13 +72,30 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
 
 };
 
-RabbitMQBus.prototype.send = function send (queueName, message) {
+RabbitMQBus.prototype.unlisten = function unlisten (queueName, options) {  
+  if (this.queues[queueName] === undefined) {
+    throw new Error('no queue currently listening at ' + queueName);
+  } else {
+    return this.queues[queueName].unlisten(options);
+  }
+};
+
+RabbitMQBus.prototype.destroyListener = function removeListener (queueName) {  
+  if (this.queues[queueName] === undefined) {
+    throw new Error('no queue currently listening at ' + queueName);
+  } else {
+    return this.queues[queueName].destroy();
+  }
+};
+
+RabbitMQBus.prototype.send = function send (queueName, message, options) {
   var self = this;
+  options = options || {};
 
   this.initialized.done(function() {
-
     if (self.queues[queueName] === undefined) {
-      self.queues[queueName] = new Queue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
+      extend(options, { bus: self, connection: self.connection, queueName: queueName, log: self.log });
+      self.queues[queueName] = new Queue(options);
     }
     self.handleOutgoing(queueName, message, function (queueName, message) {
       log('sending to queue ' + queueName + ' event ' + util.inspect(message));
@@ -94,15 +112,22 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
     callback = options;
     options = {};
   }
-  
+
+  var handle = null;
+  function _unsubscribe (options) {
+    handle.unsubscribe(options);
+  }
+
   this.initialized.done(function() {
-    
-  if (self.pubsubqueues[queueName] === undefined) {
+    if (self.pubsubqueues[queueName] === undefined) {
       self.pubsubqueues[queueName] = new PubSubQueue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
     }
-    self.pubsubqueues[queueName].subscribe(callback, options);
-
+    handle = self.pubsubqueues[queueName].subscribe(callback, options);
   });
+
+  return {
+    unsubscribe: _unsubscribe
+  }
 
 };
 

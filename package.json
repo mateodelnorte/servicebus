@@ -18,9 +18,10 @@
   },
   "dependencies": {
     "amqp": "0.1.8",
-    "node-uuid": "1.4.0",
+    "bluebird": "~1.0.0",
     "debug": "~0.7.2",
-    "bluebird": "~1.0.0"
+    "extend": "^1.2.1",
+    "node-uuid": "1.4.0"
   },
   "devDependencies": {
     "longjohn": "~0.2.0",

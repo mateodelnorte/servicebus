@@ -66,8 +66,10 @@ describe('servicebus', function(){
       var count = 0;
       var interval = setInterval(function checkDone () {
         if (count === 4) {
-          done();
-          clearInterval(interval);
+          bus.destroyListener('my.event.4').on('success', function () {
+            clearInterval(interval);
+            done();
+          });
         } else {
           // log('not done yet!');
         }
@@ -86,6 +88,41 @@ describe('servicebus', function(){
         //});
       }, 10);
     });
-  
+    
   });
+
+  describe('#unlisten', function() {
+
+    it('should cause message to not be received by listen', function (done){
+      bus.listen('my.event.17', function (event) { 
+        done(new Error('should not receive events after unlisten'));
+      });
+      setTimeout(function () {
+        bus.unlisten('my.event.17').on('success', function () {
+          bus.send('my.event.17', { test: 'data'});
+          setTimeout(function () {
+            done();
+          }, 100);
+        });
+      }, 2000);
+    });
+
+  });
+
+  describe('#destroyListener', function() {
+
+    it('should cause message to not be received by listen', function (done){
+      bus.listen('my.event.18', { ack: true }, function (event) { 
+        done(new Error('should not receive events after destroy'));
+      });
+      setTimeout(function () {
+        bus.destroyListener('my.event.18').on('success', function () {
+          bus.send('my.event.18', { test: 'data'});
+          setTimeout(done, 100);
+        });
+      }, 2000);
+    });
+
+  });
+
 })

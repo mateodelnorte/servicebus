@@ -10,6 +10,8 @@ function Queue(options) {
   this.maxRetries = options.maxRetries || 3;
   this.queueName = options.queueName;
   this.rejected = {};
+  this.contentType = options.contentType || 'application/json';
+  this.deliveryMode = (options.ack || options.acknowledge) ? 2 : 1; // default to non-persistent messages
 
   events.EventEmitter.call(this);
 }
@@ -30,7 +32,7 @@ Queue.prototype.listen = function listen (callback, options) {
   if (options && options.ack) {
     queueOptions.durable = true;
     queueOptions.autoDelete = false;
-    self.connection.queue(self.queueName + '.error', queueOptions, function(eq) {
+    self.errorQueue = self.connection.queue(self.queueName + '.error', queueOptions, function(eq) {
       eq.bind(self.errorQueueName);
       eq.on('queueBindOk', function() {
         self.log('bound to ' + self.errorQueueName);  
@@ -38,24 +40,43 @@ Queue.prototype.listen = function listen (callback, options) {
     });
   }
   
-  var q = this.connection.queue(this.queueName, queueOptions, function() {
-    q.bind(self.queueName);
-    q.on('queueBindOk', function() {
+  self.queue = this.connection.queue(this.queueName, queueOptions, function() {
+    self.queue.bind(self.queueName);
+    self.queue.on('queueBindOk', function() {
       self.log('listening to queue ' + self.queueName + ' with options ' + util.inspect(options));
-      q.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
+      self.queue.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
         self.bus.handleIncoming(message, headers, deliveryInfo, messageHandle, options, function (message, headers, deliveryInfo, messageHandle, options) {
            callback(message, headers, deliveryInfo, messageHandle, options);
         });
+      }).on('success', function (subscription) {
+        self.subscription = subscription;
       });
       self.initialized = true;
     });
   });
 };
 
-Queue.prototype.send = function send (event) {
+Queue.prototype.destroy = function destroy (options) {
+  options = options || {};
+  if ( ! options.preserveErrorQueue && this.errorQueue) this.errorQueue.destroy(options);
+  return this.queue.destroy(options);
+}
+
+Queue.prototype.unlisten = function unlisten () {
+  if (this.subscription) {
+    return this.queue.unsubscribe(this.subscription.consumerTag);
+  } else {
+    throw new Error('Attempted to unlisten a queue that is not yet listening.');
+  }
+}
+
+Queue.prototype.send = function send (event, options) {
   var self = this;
   process.nextTick(function () {
-    self.connection.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
+    self.connection.publish(self.queueName, event, { 
+      contentType: self.contentType, 
+      deliveryMode: self.deliveryMode
+    });
   });
 };
 

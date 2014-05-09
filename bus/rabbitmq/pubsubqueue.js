@@ -8,7 +8,7 @@ function PubSubQueue (options) {
   this.bus = options.bus;
   this.connection = options.connection;
   this.correlator = new Correlator();
-  this.errorQueueName = options.queueName + '.error';
+  // this.errorQueueName = options.queueName + '.error';
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
   this.queueName = options.queueName;
@@ -41,21 +41,27 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
   
   this.log('queue options: ', queueOptions);
 
-  if (options && options.ack) {
-    queueOptions.durable = true;
-    queueOptions.autoDelete = false;
-    self.connection.queue(self.errorQueueName, queueOptions, function (q) {
-      q.bind(self.exchange, self.errorQueueName);
-      q.on('queueBindOk', function() {
-        self.log('bound to ' + self.errorQueueName);  
-      });
-    });
+  // if (options && options.ack) {
+  //   queueOptions.durable = true;
+  //   queueOptions.autoDelete = false;
+  //   self.connection.queue(self.errorQueueName, queueOptions, function (q) {
+  //     q.bind(self.exchange, self.errorQueueName);
+  //     q.on('queueBindOk', function() {
+  //       self.log('bound to ' + self.errorQueueName);  
+  //     });
+  //   });
+  // }
+
+  var queue;
+  function _unsubscribe (options) {
+    queue.destroy(options);
   }
 
   this.correlator.getUniqueId(self.queueName, options.subscriptionId, function (err, _id) {
     if (err) throw err;
     uniqueName = _id;
     self.connection.queue(uniqueName, queueOptions, function (q) {
+      queue = q;
       q.bind(self.exchange, self.queueName);
       q.on('queueBindOk', function() {
         self.log('subscribing to pubsub queue ' + uniqueName + 'on exchange' + self.exchange.name);
@@ -67,6 +73,10 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
       });
     });
   });
+
+  return {
+    unsubscribe: _unsubscribe
+  }
 };
 
 module.exports = PubSubQueue;
