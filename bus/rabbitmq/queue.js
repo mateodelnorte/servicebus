@@ -11,7 +11,7 @@ function Queue(options) {
   this.queueName = options.queueName;
   this.rejected = {};
   this.contentType = options.contentType || 'application/json';
-  this.deliveryMode = (options.ack || options.acknowledge) ? 2 : 1; // default to non-persistent messages
+  this.deliveryMode = (options.ack || options.acknowledge || options.persistent) ? 2 : 1; // default to non-persistent messages
 
   events.EventEmitter.call(this);
 }
