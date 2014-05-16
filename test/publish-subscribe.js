@@ -6,7 +6,7 @@ describe('servicebus', function(){
 
   describe('#publish & #subscribe', function(){
 
-    it('should cause message to be received by subscribe', function(done){
+    it('should cause message to be received by subscribe', function (done){
       bus.subscribe('my.event.11', function (event) {
         done();
       });
@@ -15,7 +15,7 @@ describe('servicebus', function(){
       }, 100);
     });
 
-    it('should fan out to when multiple listening', function(done){
+    it('should fan out to when multiple listening', function (done){
       var count = 0;
       function tryDone(){
         count++;
@@ -44,7 +44,8 @@ describe('servicebus', function(){
       }, 100);
     });
 
-    it('can handle high event throughput', function(done){
+    it('can handle high event throughput', function (done){
+      this.timeout(30000);
       var count = 0, endCount = 5000;
       function tryDone(){
         count++;

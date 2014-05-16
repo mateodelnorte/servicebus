@@ -1,7 +1,10 @@
-var events = require('events'),
-    util = require('util');
+var EventEmitter = require('events').EventEmitter;
+var Promise = require('bluebird');
+var util = require('util');
 
-function Queue(options) {
+function Queue (options) {
+  var options = options || {};
+  var queueOptions = options.queueOptions || {};
   this.bus = options.bus;
   this.connection = options.connection;
   this.errorQueueName = options.queueName + '.error';
@@ -11,12 +14,49 @@ function Queue(options) {
   this.queueName = options.queueName;
   this.rejected = {};
   this.contentType = options.contentType || 'application/json';
-  this.deliveryMode = (options.ack || options.acknowledge || options.persistent) ? 2 : 1; // default to non-persistent messages
+  this.deliveryMode = (options.ack || options.acknowledge || options.persistent) 
+    ? 2 
+    : 1; // default to non-persistent messages
+  this.ack = (options.ack || options.acknowledge);
 
-  events.EventEmitter.call(this);
+  EventEmitter.call(this);
+
+  var self = this;
+
+  this.initialized = Promise.all([
+    // we're initialized when our queues are bound
+    new Promise(function (resolve, reject) {
+      self.queue = self.connection.queue(self.queueName, queueOptions, function () {
+        self.queue.bind(self.queueName);
+        self.queue.on('queueBindOk', function() {
+          self.log('bound to queue ' + self.queueName + ' with options ' + util.inspect(options));
+          resolve();
+        });
+      });
+    }),
+    new Promise(function (resolve, reject) {
+      if (self.ack) {
+        queueOptions.durable = true;
+        queueOptions.autoDelete = false;
+        self.errorQueue = self.connection.queue(self.queueName + '.error', queueOptions, function (eq) {
+          eq.bind(self.errorQueueName);
+          eq.on('queueBindOk', function () {
+            self.log('bound to ' + self.errorQueueName);  
+            resolve();
+          });
+        });
+      } else {
+        resolve();
+      }
+    })
+  ]).catch(function (err) {
+    self.log('error connecting to queue ', options.queueName, '. error: ' + err.toString());
+    self.emit('error', err);
+  });
+
 }
 
-util.inherits(Queue, events.EventEmitter);
+util.inherits(Queue, EventEmitter);
 
 Queue.prototype.error = function error (event) {
   this.log('Message moved to error queue: ' + this.errorQueueName);
@@ -28,30 +68,16 @@ Queue.prototype.listen = function listen (callback, options) {
       queueOptions = options.queueOptions || {};
   
   var self = this;
-
-  if (options && options.ack) {
-    queueOptions.durable = true;
-    queueOptions.autoDelete = false;
-    self.errorQueue = self.connection.queue(self.queueName + '.error', queueOptions, function(eq) {
-      eq.bind(self.errorQueueName);
-      eq.on('queueBindOk', function() {
-        self.log('bound to ' + self.errorQueueName);  
-      });
-    });
-  }
   
-  self.queue = this.connection.queue(this.queueName, queueOptions, function() {
-    self.queue.bind(self.queueName);
-    self.queue.on('queueBindOk', function() {
-      self.log('listening to queue ' + self.queueName + ' with options ' + util.inspect(options));
-      self.queue.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
-        self.bus.handleIncoming(message, headers, deliveryInfo, messageHandle, options, function (message, headers, deliveryInfo, messageHandle, options) {
-           callback(message, headers, deliveryInfo, messageHandle, options);
-        });
-      }).on('success', function (subscription) {
-        self.subscription = subscription;
+  this.log('listening to queue ' + this.queueName + ' with options ' + util.inspect(options));
+
+  this.initialized.done(function () {
+    self.queue.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
+      self.bus.handleIncoming(message, headers, deliveryInfo, messageHandle, options, function (message, headers, deliveryInfo, messageHandle, options) {
+         callback(message, headers, deliveryInfo, messageHandle, options);
       });
-      self.initialized = true;
+    }).on('success', function (subscription) {
+      self.subscription = subscription;
     });
   });
 };

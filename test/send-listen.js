@@ -7,7 +7,7 @@ describe('servicebus', function(){
 
   describe('#send & #listen', function() {
 
-    it('should cause message to be received by listen', function(done){
+    it('should cause message to be received by listen', function (done){
       bus.listen('my.event.1', function (event) {
         done();
       });
@@ -16,7 +16,7 @@ describe('servicebus', function(){
       }, 10);
     });
 
-    it('should distribute out to subsequent listeners when multiple listening', function(done){
+    it('should distribute out to subsequent listeners when multiple listening', function (done){
       var count = 0;
       function tryDone(){
         count++;
@@ -44,7 +44,8 @@ describe('servicebus', function(){
       }, 10);
     });
 
-    it('can handle high event throughput', function(done){
+    it('can handle high event throughput', function (done){
+      this.timeout(30000);
       var count = 0, endCount = 5000;
       function tryDone(){
         count++;
@@ -62,17 +63,15 @@ describe('servicebus', function(){
       }, 100);
     });
 
-    it('sends subsequent messages only after previous messages are acknowledged', function(done){
+    it('sends subsequent messages only after previous messages are acknowledged', function (done){
       var count = 0;
       var interval = setInterval(function checkDone () {
         if (count === 4) {
+          clearInterval(interval);
           bus.destroyListener('my.event.4').on('success', function () {
-            clearInterval(interval);
             done();
           });
-        } else {
-          // log('not done yet!');
-        }
+        } 
       }, 10);
       bus.listen('my.event.4', { ack: true }, function (event) {
         count++;
@@ -80,7 +79,6 @@ describe('servicebus', function(){
       });
       setTimeout(function () {
         //process.nextTick(function () {
-
           bus.send('my.event.4', { my: 'event' });
           bus.send('my.event.4', { my: 'event' });
           bus.send('my.event.4', { my: 'event' });
@@ -104,7 +102,7 @@ describe('servicebus', function(){
             done();
           }, 100);
         });
-      }, 2000);
+      }, 1500);
     });
 
   });
@@ -120,7 +118,7 @@ describe('servicebus', function(){
           bus.send('my.event.18', { test: 'data'});
           setTimeout(done, 100);
         });
-      }, 2000);
+      }, 1500);
     });
 
   });

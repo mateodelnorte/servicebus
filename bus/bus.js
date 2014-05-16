@@ -1,7 +1,13 @@
+var EventEmitter = require('events').EventEmitter;
+var util = require('util');
+
 function Bus () {
   this.incomingMiddleware = [];
   this.outgoingMiddleware = [];
+  EventEmitter.call(this);
 }
+
+util.inherits(Bus, EventEmitter);
 
 Bus.prototype.use = function (middleware) {
   if (middleware.handleIncoming) this.incomingMiddleware.push(middleware.handleIncoming);
@@ -14,6 +20,8 @@ Bus.prototype.handleIncoming = function (message, headers, deliveryInfo, message
   var self = this;
 
   function next (err) {
+    if (err) throw err; // at this point we don't have a mechanism for providing an error-aware callback to sends and publishes, 
+                        // so we'll throw. in the future we can check for the presense of one and throw if it's not provided
 
     var layer;
     var args = Array.prototype.slice.call(arguments, 1);
@@ -42,6 +50,8 @@ Bus.prototype.handleOutgoing = function (queueName, message, callback) {
   var self = this;
 
   function next (err) {
+    if (err) throw err; // at this point we don't have a mechanism for providing a callback to sends and publishes, 
+                        // so we'll throw. in the future we can check for the presense of one and throw if it's not provided
 
     var layer;
     var args = Array.prototype.slice.call(arguments, 1);

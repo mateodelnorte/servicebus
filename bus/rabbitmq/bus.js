@@ -29,6 +29,13 @@ function RabbitMQBus(options, implOpts) {
 
   this.connection.on('close', function () {
     self.log('rabbitmq connection closed.');
+    self.emit('close');
+  });
+
+  this.connection.on('error', function (err) {
+    // if you don't want servicebus to crash on error, you'll need to listen on the 
+    // bus' error event, log or do whatever you like. 
+    self.emit('error', err);
   });
 
   this.initialized = new Promise(function (resolve, reject) {
@@ -37,12 +44,13 @@ function RabbitMQBus(options, implOpts) {
 
     self.connection.on('ready', function () {
       self.log("rabbitmq connected to " + self.connection.serverProperties.product);
+      self.emit('ready');
       resolve();
     });
 
   }).catch(Promise.CancellationError, function (err) {
     self.log('Error connecting to rabbitmq at '  + options.url + ' error: ' + err.toString());
-    throw err;
+    self.emit('error', err);
   });
 
   Bus.call(this);
