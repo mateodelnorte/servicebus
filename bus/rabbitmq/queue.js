@@ -13,6 +13,7 @@ function Queue (options) {
   this.maxRetries = options.maxRetries || 3;
   this.queueName = options.queueName;
   this.rejected = {};
+  this.routingKey = options.routingKey;
   this.contentType = options.contentType || 'application/json';
   this.deliveryMode = (options.ack || options.acknowledge || options.persistent) 
     ? 2 
@@ -26,10 +27,12 @@ function Queue (options) {
   this.initialized = Promise.all([
     // we're initialized when our queues are bound
     new Promise(function (resolve, reject) {
+      self.log('connecting to queue ' + self.queueName);
       self.queue = self.connection.queue(self.queueName, queueOptions, function () {
-        self.queue.bind(self.queueName);
+        self.log('binding to routingKey ' + self.routingKey || self.queueName);
+        self.queue.bind(self.routingKey || self.queueName);
         self.queue.on('queueBindOk', function() {
-          self.log('bound to queue ' + self.queueName + ' with options ' + util.inspect(options));
+          self.log('bound to queue ' + self.queueName);
           resolve();
         });
       });
@@ -98,8 +101,8 @@ Queue.prototype.unlisten = function unlisten () {
 
 Queue.prototype.send = function send (event, options) {
   var self = this;
-  process.nextTick(function () {
-    self.connection.publish(self.queueName, event, { 
+  this.initialized.done(function () {
+    self.connection.publish(self.routingKey || self.queueName, event, { 
       contentType: self.contentType, 
       deliveryMode: self.deliveryMode
     });

@@ -78,12 +78,44 @@ describe('servicebus', function(){
         event.handle.ack();
       });
       setTimeout(function () {
-        //process.nextTick(function () {
-          bus.send('my.event.4', { my: 'event' });
-          bus.send('my.event.4', { my: 'event' });
-          bus.send('my.event.4', { my: 'event' });
-          bus.send('my.event.4', { my: 'event' });
-        //});
+        bus.send('my.event.4', { my: 'event' });
+        bus.send('my.event.4', { my: 'event' });
+        bus.send('my.event.4', { my: 'event' });
+        bus.send('my.event.4', { my: 'event' });
+      }, 10);
+    });
+
+    it('allows routing based on routingKey, on same named queue', function (done){
+      var count = 0;
+      var interval = setInterval(function checkDone () {
+        if (count === 4) {
+          clearInterval(interval);
+          bus.destroyListener('my.event.routingKey').on('success', function () {
+            done();
+          });
+        } 
+      }, 10);
+      bus.listen('my.event.routingKey.1', { ack: true }, function (event) {
+        count++;
+        event.handle.ack();
+      });
+      bus.listen('my.event.routingKey.2', { ack: true }, function (event) {
+        count++;
+        event.handle.ack();
+      });
+      bus.listen('my.event.routingKey.3', { ack: true }, function (event) {
+        count++;
+        event.handle.ack();
+      });
+      bus.listen('my.event.routingKey.4', { ack: true }, function (event) {
+        count++;
+        event.handle.ack();
+      });
+      setTimeout(function () {
+        bus.send({ queueName: 'my.event.routingKey', routingKey: 'my.event.routingKey.1' }, { my: 'event1' });
+        bus.send({ queueName: 'my.event.routingKey', routingKey: 'my.event.routingKey.2' }, { my: 'event2' });
+        bus.send({ queueName: 'my.event.routingKey', routingKey: 'my.event.routingKey.3' }, { my: 'event3' });
+        bus.send({ queueName: 'my.event.routingKey', routingKey: 'my.event.routingKey.4' }, { my: 'event4' });
       }, 10);
     });
     

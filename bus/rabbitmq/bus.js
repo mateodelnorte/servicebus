@@ -69,13 +69,16 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
     options = {};
   }
 
+  this.setOptions(queueName, options);
+
   this.initialized.done(function() {
 
-    if (self.queues[queueName] === undefined) {
-      log('creating queue ' + queueName);
-      self.queues[queueName] = new Queue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
+    if (self.queues[options.queueName] === undefined) {
+      log('creating queue ' + options.queueName);
+      self.queues[options.queueName] = new Queue(options);
     }
-    self.queues[queueName].listen(callback, options);
+
+    self.queues[options.queueName].listen(callback, options);
   });
 
 };
@@ -96,16 +99,29 @@ RabbitMQBus.prototype.destroyListener = function removeListener (queueName) {
   }
 };
 
+RabbitMQBus.prototype.setOptions = function (queueName, options) {
+  if (typeof queueName === 'object') {
+    options.queueName = queueName.queueName;
+    options.routingKey = queueName.routingKey;
+    queueName = queueName.queueName;
+  } else {
+    options.queueName = queueName;
+  }
+
+  extend(options, { bus: this, connection: this.connection, log: this.log });
+} 
+
 RabbitMQBus.prototype.send = function send (queueName, message, options) {
   var self = this;
   options = options || {};
 
+  this.setOptions(queueName, options);
+
   this.initialized.done(function() {
-    if (self.queues[queueName] === undefined) {
-      extend(options, { bus: self, connection: self.connection, queueName: queueName, log: self.log });
-      self.queues[queueName] = new Queue(options);
+    if (self.queues[options.queueName] === undefined) {
+      self.queues[options.queueName] = new Queue(options);
     }
-    self.handleOutgoing(queueName, message, function (queueName, message) {
+    self.handleOutgoing(options.queueName, message, function (queueName, message) {
       log('sending to queue ' + queueName + ' event ' + util.inspect(message));
       self.queues[queueName].send(message);
     });
@@ -121,16 +137,18 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
     options = {};
   }
 
+  this.setOptions(queueName, options);
+
   var handle = null;
   function _unsubscribe (options) {
     handle.unsubscribe(options);
   }
 
   this.initialized.done(function() {
-    if (self.pubsubqueues[queueName] === undefined) {
-      self.pubsubqueues[queueName] = new PubSubQueue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
+    if (self.pubsubqueues[options.queueName] === undefined) {
+      self.pubsubqueues[options.queueName] = new PubSubQueue(options);
     }
-    handle = self.pubsubqueues[queueName].subscribe(callback, options);
+    handle = self.pubsubqueues[options.queueName].subscribe(callback, options);
   });
 
   return {
@@ -139,16 +157,19 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
 
 };
 
-RabbitMQBus.prototype.publish = function publish (queueName, message) {
+RabbitMQBus.prototype.publish = function publish (queueName, message, options) {
   var self = this;
+  options = options || {};
+
+  this.setOptions(queueName, options);
 
   this.initialized.done(function() {
     
-    if (self.pubsubqueues[queueName] === undefined) {
-      log('creating pubsub queue ' + queueName);
-      self.pubsubqueues[queueName] = new PubSubQueue({ bus: self, connection: self.connection, queueName: queueName, log: self.log });
+    if (self.pubsubqueues[options.queueName] === undefined) {
+      log('creating pubsub queue ' + options.queueName);
+      self.pubsubqueues[options.queueName] = new PubSubQueue(options);
     }
-    self.handleOutgoing(queueName, message, function (queueName, message) {
+    self.handleOutgoing(options.queueName, message, function (queueName, message) {
       log('sending to queue ' + queueName + ' event ' + util.inspect(message));
       self.pubsubqueues[queueName].publish(message);
     });

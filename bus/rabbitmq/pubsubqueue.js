@@ -8,7 +8,7 @@ function PubSubQueue (options) {
   this.bus = options.bus;
   this.connection = options.connection;
   this.correlator = new Correlator();
-  // this.errorQueueName = options.queueName + '.error';
+  this.errorQueueName = options.queueName + '.error';
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
   this.queueName = options.queueName;
@@ -28,7 +28,7 @@ PubSubQueue.prototype.publish = function publish (event) {
     });
   } else {
     this.log('publishing to exchange ' + self.exchange.name + ' ' + self.queueName + ' event ' + util.inspect(event));
-    process.nextTick(function () {
+    setImmediate(function () {
       self.exchange.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
     });
   }
@@ -41,16 +41,16 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
   
   this.log('queue options: ', queueOptions);
 
-  // if (options && options.ack) {
-  //   queueOptions.durable = true;
-  //   queueOptions.autoDelete = false;
-  //   self.connection.queue(self.errorQueueName, queueOptions, function (q) {
-  //     q.bind(self.exchange, self.errorQueueName);
-  //     q.on('queueBindOk', function() {
-  //       self.log('bound to ' + self.errorQueueName);  
-  //     });
-  //   });
-  // }
+  if (options && options.ack) {
+    queueOptions.durable = true;
+    queueOptions.autoDelete = false;
+    self.connection.queue(self.errorQueueName, queueOptions, function (q) {
+      q.bind(self.exchange, self.errorQueueName);
+      q.on('queueBindOk', function() {
+        self.log('bound to ' + self.errorQueueName);  
+      });
+    });
+  }
 
   var queue;
   function _unsubscribe (options) {
