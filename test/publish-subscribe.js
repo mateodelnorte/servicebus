@@ -88,6 +88,10 @@ describe('servicebus', function(){
         bus.publish('my.event.14', { my: 'event' });
       }, 100);
     });
+
+    // it('should allow for a mixture of ack:true and ack:false subscriptions', function () {
+
+    // });
   
 	});
 });

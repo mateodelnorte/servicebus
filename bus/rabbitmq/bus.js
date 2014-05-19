@@ -20,6 +20,7 @@ function RabbitMQBus(options, implOpts) {
   this.log = options.log || log;
   this.pubsubqueues = {};
   this.queues = {};
+  this.queuesFile = options.queuesFile;
 
   log('connecting to rabbitmq on ' + options.url);
 
@@ -108,7 +109,7 @@ RabbitMQBus.prototype.setOptions = function (queueName, options) {
     options.queueName = queueName;
   }
 
-  extend(options, { bus: this, connection: this.connection, log: this.log });
+  extend(options, { bus: this, connection: this.connection, log: this.log, queuesFile: this.queuesFile });
 } 
 
 RabbitMQBus.prototype.send = function send (queueName, message, options) {
@@ -148,7 +149,7 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
     if (self.pubsubqueues[options.queueName] === undefined) {
       self.pubsubqueues[options.queueName] = new PubSubQueue(options);
     }
-    handle = self.pubsubqueues[options.queueName].subscribe(callback, options);
+    handle = self.pubsubqueues[options.queueName].subscribe(options, callback);
   });
 
   return {

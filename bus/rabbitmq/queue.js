@@ -1,10 +1,17 @@
 var EventEmitter = require('events').EventEmitter;
+var extend = require('extend');
 var Promise = require('bluebird');
 var util = require('util');
 
 function Queue (options) {
   var options = options || {};
   var queueOptions = options.queueOptions || {};
+
+  extend(queueOptions, {
+    autoDelete: ! (options.ack || options.acknowledge),
+    durable: options.ack || options.acknowledge
+  });
+
   this.bus = options.bus;
   this.connection = options.connection;
   this.errorQueueName = options.queueName + '.error';

@@ -7,7 +7,7 @@ var Correlator = require('./correlator'),
 function PubSubQueue (options) {
   this.bus = options.bus;
   this.connection = options.connection;
-  this.correlator = new Correlator();
+  this.correlator = new Correlator(options);
   this.errorQueueName = options.queueName + '.error';
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
@@ -34,7 +34,7 @@ PubSubQueue.prototype.publish = function publish (event) {
   }
 };
 
-PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
+PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
   var self = this,
       uniqueName,
       queueOptions = options.queueOptions || {};
@@ -56,10 +56,8 @@ PubSubQueue.prototype.subscribe = function subscribe (callback, options) {
   function _unsubscribe (options) {
     queue.destroy(options);
   }
-
-  this.correlator.getUniqueId(self.queueName, options.subscriptionId, function (err, _id) {
+  this.correlator.queueName(options, function (err, uniqueName) {
     if (err) throw err;
-    uniqueName = _id;
     self.connection.queue(uniqueName, queueOptions, function (q) {
       queue = q;
       q.bind(self.exchange, self.queueName);

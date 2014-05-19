@@ -1,11 +1,12 @@
 var events = require('events'),
     fs = require('fs'),
+    path = require('path'),
     util = require('util');
 
 // TODO: enable specifying an arbitrary filename
 
 function Serializer () {
-  this.filename = process.cwd() + '/.queues';
+  this.filename = path.join(process.cwd(), '.queues');
   events.EventEmitter.call(this);
 }
 
