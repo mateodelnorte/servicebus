@@ -1,5 +1,6 @@
 var amqp = require('amqp'),
     Bus = require('../bus'),
+    Correlator = require('./correlator'),
     log = require('debug')('servicebus'),
     events = require('events'),
     extend = require('extend'),
@@ -15,7 +16,8 @@ function RabbitMQBus(options, implOpts) {
   options = options || {}, implOpts, self = this;
   options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
   options.vhost = options.vhost || process.env.RABBITMQ_VHOST || '/';
-  
+
+  this.correlator = new Correlator(options);  
   this.delayOnStartup = options.delayOnStartup || 10;
   this.log = options.log || log;
   this.pubsubqueues = {};
@@ -109,7 +111,13 @@ RabbitMQBus.prototype.setOptions = function (queueName, options) {
     options.queueName = queueName;
   }
 
-  extend(options, { bus: this, connection: this.connection, log: this.log, queuesFile: this.queuesFile });
+  extend(options, { 
+    bus: this, 
+    connection: this.connection, 
+    correlator: this.correlator, 
+    log: this.log, 
+    queuesFile: this.queuesFile 
+  });
 } 
 
 RabbitMQBus.prototype.send = function send (queueName, message, options) {

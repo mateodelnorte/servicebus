@@ -1,5 +1,4 @@
-var Correlator = require('./correlator'),
-    events = require('events'),
+var events = require('events'),
     newId = require('node-uuid').v4,
     Serializer = require('./serializer'),
     util = require('util');
@@ -7,7 +6,7 @@ var Correlator = require('./correlator'),
 function PubSubQueue (options) {
   this.bus = options.bus;
   this.connection = options.connection;
-  this.correlator = new Correlator(options);
+  this.correlator = options.correlator;
   this.errorQueueName = options.queueName + '.error';
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
