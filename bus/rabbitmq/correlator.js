@@ -34,14 +34,17 @@ util.inherits(Correlator, events.EventEmitter);
 
 Correlator.prototype.queueName = function queueName (options, callback) {
   var self = this;
+  var routingKey = options.queueName;
   this.loading.done(function (result) {
     queues = result;
     var queueName;
-    if (queues.hasOwnProperty(options.queueName)) {
-      queueName = queues[options.queueName];
+    if (queues.hasOwnProperty(routingKey)) {
+      queueName = queues[routingKey];
+    } else if (options.subscriptionName) {
+      queueName = options.subscriptionName;
     } else {
-      queueName = util.format('%s.%s', options.queueName, newId());
-      queues[options.queueName] = queueName;
+      queueName = util.format('%s.%s', routingKey, newId());
+      queues[routingKey] = queueName;
     }
     self.persistQueueFile(function (err) {
       if (err) return callback(err);

@@ -1,3 +1,5 @@
 node_modules
 .queues
 .DS_Store
+.queues
+npm-debug.log
