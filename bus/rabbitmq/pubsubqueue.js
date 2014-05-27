@@ -22,6 +22,7 @@ function PubSubQueue (options) {
 PubSubQueue.prototype.publish = function publish (event) {
   var self = this;
   if ( ! this.exchange) {
+    this.connection.setMaxListeners(Infinity);
     this.connection.once('readyToPublish', function () {
       self.publish(event);
     });
