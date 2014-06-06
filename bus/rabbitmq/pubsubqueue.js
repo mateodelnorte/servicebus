@@ -11,9 +11,15 @@ function PubSubQueue (options) {
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
   this.queueName = options.queueName;
-  this.rejected = {}; 
+  this.rejected = {};
+  this.exchangeName = this.connection.options.exchangeName;
+  this.exchangeOptions = {
+    type: this.connection.options.exchangeOptions.type || 'topic',
+    durable: this.connection.options.exchangeOptions.durable === false ? false : true,
+    autoDelete: this.connection.options.exchangeOptions.autoDelete || false
+  };
   var self = this;
-  this.connection.exchange('amq.topic', { type: 'topic', durable: true, autoDelete: false }, function (exchange) {
+  this.connection.exchange(this.exchangeName, this.exchangeOptions, function (exchange) {
     self.exchange = exchange;
     self.connection.emit('readyToPublish');
   });
