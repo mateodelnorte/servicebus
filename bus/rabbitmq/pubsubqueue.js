@@ -25,17 +25,25 @@ function PubSubQueue (options) {
   });
 };
 
-PubSubQueue.prototype.publish = function publish (event) {
+PubSubQueue.prototype.publish = function publish (event, options) {
   var self = this;
   if ( ! this.exchange) {
     this.connection.setMaxListeners(Infinity);
     this.connection.once('readyToPublish', function () {
-      self.publish(event);
+      options = {
+        contentType: options.contentType || 'application/json',
+        deliveryMode: options.deliveryMode || 2,
+        replyTo: options.replyTo || null
+      };
+      self.publish(event, options);
     });
   } else {
     this.log('publishing to exchange ' + self.exchange.name + ' ' + self.queueName + ' event ' + util.inspect(event));
     setImmediate(function () {
-      self.exchange.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
+      if ( ! options.replyTo) {
+        delete options.replyTo;
+      }
+      self.exchange.publish(self.queueName, event, options);
     });
   }
 };

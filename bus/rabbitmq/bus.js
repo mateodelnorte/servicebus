@@ -182,7 +182,7 @@ RabbitMQBus.prototype.publish = function publish (queueName, message, options) {
     }
     self.handleOutgoing(options.queueName, message, function (queueName, message) {
       log('sending to queue ' + queueName + ' event ' + util.inspect(message));
-      self.pubsubqueues[queueName].publish(message);
+      self.pubsubqueues[queueName].publish(message, options);
     });
 
   });
