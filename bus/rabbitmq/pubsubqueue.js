@@ -12,11 +12,12 @@ function PubSubQueue (options) {
   this.maxRetries = options.maxRetries || 3;
   this.queueName = options.queueName;
   this.rejected = {};
-  this.exchangeName = this.connection.options.exchangeName;
+  this.exchangeName = this.connection.options.exchangeName || 'amq.topic';
+  var exchangeOptions = this.connection.options.exchangeOptions || {};
   this.exchangeOptions = {
-    type: this.connection.options.exchangeOptions.type || 'topic',
-    durable: this.connection.options.exchangeOptions.durable === false ? false : true,
-    autoDelete: this.connection.options.exchangeOptions.autoDelete || false
+    type: exchangeOptions.type || 'topic',
+    durable: exchangeOptions.durable === false ? false : true,
+    autoDelete: exchangeOptions.autoDelete || false
   };
   var self = this;
   this.connection.exchange(this.exchangeName, this.exchangeOptions, function (exchange) {
