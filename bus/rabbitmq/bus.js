@@ -16,6 +16,8 @@ function RabbitMQBus(options, implOpts) {
   options = options || {}, implOpts, self = this;
   options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
   options.vhost = options.vhost || process.env.RABBITMQ_VHOST || '/';
+  options.exchangeName = options.exchangeName || 'amq.topic';
+  options.exchangeOptions = options.exchangeOptions || {};
 
   this.correlator = new Correlator(options);  
   this.delayOnStartup = options.delayOnStartup || 10;
