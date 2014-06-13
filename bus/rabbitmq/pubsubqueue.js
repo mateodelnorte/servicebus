@@ -26,17 +26,17 @@ function PubSubQueue (options) {
   });
 };
 
-PubSubQueue.prototype.publish = function publish (event) {
+PubSubQueue.prototype.publish = function publish (event, publishOptions) {
   var self = this;
   if ( ! this.exchange) {
     this.connection.setMaxListeners(Infinity);
     this.connection.once('readyToPublish', function () {
-      self.publish(event);
+      self.publish(event, publishOptions);
     });
   } else {
     this.log('publishing to exchange ' + self.exchange.name + ' ' + self.queueName + ' event ' + util.inspect(event));
     setImmediate(function () {
-      self.exchange.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
+      self.exchange.publish(self.queueName, event, publishOptions);
     });
   }
 };
