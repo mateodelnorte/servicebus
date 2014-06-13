@@ -1,18 +1,17 @@
 {
-  "author": "Thibault Laurens <laurens.thibault@gmail.com>",
+  "author": "Matt Walters <mattwalters5@gmail.com>",
   "contributors": [
-      "mattwalters5@gmail.com",
-      "timisbusy@gmail.com",
-      "mail@chrisabrams.com",
-      "laurens.thibault@gmail.com"
+    "mattwalters5@gmail.com",
+    "timisbusy@gmail.com",
+    "mail@chrisabrams.com"
   ],
-  "name": "hera-servicebus",
+  "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
   "version": "0.4.7",
-  "homepage": "https://github.com/ThibaultLaurens/servicebus",
+  "homepage": "https://github.com/mateodelnorte/servicebus",
   "repository": {
     "type": "git",
-    "url": "git://github.com/ThibaultLaurens/servicebus.git"
+    "url": "git://github.com/mateodelnorte/servicebus.git"
   },
   "engines": {
     "node": "0.6 || 0.8 || 0.9 || 0.10"
