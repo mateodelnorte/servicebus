@@ -1,82 +1,101 @@
-var events = require('events'),
-    newId = require('node-uuid').v4,
-    Serializer = require('./serializer'),
-    util = require('util');
+var events = require('events');
+var extend = require('extend');
+var newId = require('node-uuid').v4;
+var Serializer = require('./serializer');
+var util = require('util');
 
 function PubSubQueue (options) {
-  this.bus = options.bus;
-  this.connection = options.connection;
-  this.correlator = options.correlator;
-  this.errorQueueName = options.queueName + '.error';
-  this.log = options.log;
-  this.maxRetries = options.maxRetries || 3;
-  this.queueName = options.queueName;
-  this.rejected = {};
-  this.exchangeName = this.connection.options.exchangeName || 'amq.topic';
-  var exchangeOptions = this.connection.options.exchangeOptions || {};
-  this.exchangeOptions = {
+
+  var options = options || {};
+  var exchangeOptions = options.exchangeOptions || {};
+  var queueOptions = options.queueOptions || {};
+
+  extend(queueOptions, {
+    autoDelete: true,//! Boolean(options.ack || options.acknowledge,
+    contentType: options.contentType || 'application/json',
+    durable: Boolean(options.ack || options.acknowledge),
+    exclusive: options.exclusive || false,
+    persistent: Boolean(options.ack || options.acknowledge || options.persistent)
+  });
+
+  extend(exchangeOptions, {
     type: exchangeOptions.type || 'topic',
     durable: exchangeOptions.durable === false ? false : true,
     autoDelete: exchangeOptions.autoDelete || false
-  };
+  });
+
+  this.ack = (options.ack || options.acknowledge);
+  this.bus = options.bus;
+  this.correlator = options.correlator;
+  this.errorQueueName = options.queueName + '.error';
+  this.exchangeName = options.exchangeName || 'amq.topic';
+  this.exchangeOptions = exchangeOptions;
+  this.formatter = options.formatter;
+  this.listenChannel = options.listenChannel;
+  this.log = options.log;
+  this.maxRetries = options.maxRetries || 3;
+  this.queueName = options.queueName;
+  this.queueOptions = queueOptions;
+  this.rejected = {};
+  this.routingKey = options.routingKey;
+  this.sendChannel = options.sendChannel;
+
+  // set a promise in order to chain off of initilized?
+  this.log('asserting exchange %s', this.exchangeName)
+  this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
+};
+
+PubSubQueue.prototype.publish = function publish (event, options) {
+  options = options || {};
   var self = this;
-  this.connection.exchange(this.exchangeName, this.exchangeOptions, function (exchange) {
-    self.exchange = exchange;
-    self.connection.emit('readyToPublish');
+
+  this.log('publishing to exchange ' + self.exchangeName + ' ' + self.queueName);
+
+  extend(options, {
+    contentType: this.contentType,
+    formatter: this.formatter,
+    persistent: Boolean(options.ack || options.acknowledge || options.persistent || self.ack)
+  });
+  
+  setImmediate(function () {
+    self.sendChannel.publish(self.exchangeName, self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options);
   });
 };
 
-PubSubQueue.prototype.publish = function publish (event) {
-  var self = this;
-  if ( ! this.exchange) {
-    this.connection.setMaxListeners(Infinity);
-    this.connection.once('readyToPublish', function () {
-      self.publish(event);
-    });
-  } else {
-    this.log('publishing to exchange ' + self.exchange.name + ' ' + self.queueName + ' event ' + util.inspect(event));
-    setImmediate(function () {
-      self.exchange.publish(self.queueName, event, { contentType: 'application/json', deliveryMode: 2 });
-    });
-  }
-};
-
 PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
-  var self = this,
-      uniqueName,
-      queueOptions = options.queueOptions || {};
-  
-  this.log('queue options: ', queueOptions);
+  var self = this;
 
-  if (options && options.ack) {
-    queueOptions.durable = true;
-    queueOptions.autoDelete = false;
-    self.connection.queue(self.errorQueueName, queueOptions, function (q) {
-      q.bind(self.exchange, self.errorQueueName);
-      q.on('queueBindOk', function() {
-        self.log('bound to ' + self.errorQueueName);  
-      });
-    });
-  }
-
-  var queue;
   function _unsubscribe (options) {
-    queue.destroy(options);
+    self.listenChannel.cancel(self.subscription.consumerTag, options);
   }
+
   this.correlator.queueName(options, function (err, uniqueName) {
     if (err) throw err;
-    self.connection.queue(uniqueName, queueOptions, function (q) {
-      queue = q;
-      q.bind(self.exchange, self.queueName);
-      q.on('queueBindOk', function() {
-        self.log('subscribing to pubsub queue ' + uniqueName + 'on exchange' + self.exchange.name);
-        q.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
-          self.bus.handleIncoming(message, headers, deliveryInfo, messageHandle, options, function (message, headers, deliveryInfo, messageHandle, options) {
-             callback(message, headers, deliveryInfo, messageHandle, options);
+    self.listenChannel.assertQueue(uniqueName, self.queueOptions)
+      .then(function (qok) {
+        return self.listenChannel.bindQueue(uniqueName, self.exchangeName, self.routingKey || self.queueName);
+      }).then(function (queue) {
+        self.listenChannel.consume(uniqueName, function (message) {
+          /*
+              Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html 
+              & http://www.rabbitmq.com/consumer-cancel.html: 
+
+              If the consumer is cancelled by RabbitMQ, the message callback will be invoked with null.
+            */
+          if (message === null) {
+            return; 
+          }
+          // todo: map contentType to default formatters
+          message.content = options.formatter.deserialize(message.content);
+          self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
+             callback(message.content);
           });
-        });
+        }, { noAck: ! self.ack })
+          .then(function (ok) {
+            self.subscription = { consumerTag: ok.consumerTag };
+          });;
       });
-    });
+
   });
 
   return {

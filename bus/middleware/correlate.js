@@ -1,7 +1,6 @@
 var newId = require('node-uuid');
 
 function addCorrelationId (queueName, message, next) {
-  
   if ( ! message.cid) {
     message.cid = newId();
   }

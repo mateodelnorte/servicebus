@@ -1,6 +1,8 @@
 var log = require('debug')('servicebus:retry');
-var maxRetries = 10, rejected = {};
 var util = require('util');
+
+var maxRetries = 10;
+var rejected = {};
 
 module.exports = function (options) {
   options = options || {};
@@ -9,36 +11,41 @@ module.exports = function (options) {
 
   return {
 
-    handleIncoming: function retry (message, headers, deliveryInfo, messageHandle, options, next) {
+    handleIncoming: function retry (channel, message, options, next) {
 
-      var bus = this;
-      
       if (options && options.ack) {
 
-        message.handle = {
-          ack: function () { messageHandle.acknowledge(); },
-          acknowledge: function () { messageHandle.acknowledge(); },
+        message.content.handle = {
+          ack: function () { 
+            channel.ack(message); 
+          },
+          acknowledge: function () { 
+            channel.ack(message); 
+          },
           reject: function () {
-            if (rejected[message.cid] == undefined) {
-              rejected[message.cid] = 1
+            if (rejected[message.content.cid] == undefined) {
+              rejected[message.content.cid] = 1;
             } else {
-              rejected[message.cid] = rejected[message.cid] + 1;
+              rejected[message.content.cid] = rejected[message.content.cid] + 1;
             }
-            if (rejected[message.cid] > maxRetries) {
-              var errorQueueName = util.format('%s.error', deliveryInfo.queue);
-              log('sending message %s to error queue %s', message.cid, errorQueueName);
-              bus.connection.publish(errorQueueName, message, { contentType: 'application/json', deliveryMode: 2 });
-              messageHandle.acknowledge();
-              delete rejected[message.cid];
+
+            if (rejected[message.content.cid] > maxRetries) {
+              var errorQueueName = util.format('%s.error', message.fields.routingKey);
+              log('sending message %s to error queue %s', message.content.cid, errorQueueName);
+              channel.sendToQueue(errorQueueName, new Buffer(JSON.stringify(message.content)), options);
+              channel.nack(message, false, false); 
+              delete rejected[message.content.cid];
             } else {
-              log('retrying message %s', message.cid);
-              messageHandle.reject(true);
+              log('retrying message %s', message.content.cid);
+              channel.nack(message, false, true);
             }
+
           }
         };
+
       }
-      
-      next(null, message, headers, deliveryInfo, messageHandle, options);
+
+      next(null, channel, message, options);
     }
 
   };

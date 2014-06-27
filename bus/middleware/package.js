@@ -1,5 +1,4 @@
 function packageMessage (queueName, message, next) {
-
   var newMessage = {
       data: message
     , datetime: message.datetime || new Date().toUTCString()

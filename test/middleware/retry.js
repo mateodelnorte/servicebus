@@ -4,7 +4,6 @@ var bus = require('../bus-shim').bus;
 
 // the following code is being use in the above shim
 // var retry = require('../../bus/middleware/retry');
-
 // bus.use(retry());
 
 describe('retry', function() {
@@ -42,8 +41,8 @@ describe('retry', function() {
         } 
       });
       setTimeout(function () {
-        bus.publish('my.event.15', { my: 'event' });
-      }, 100);
+        bus.publish('my.event.15', { data: Math.random() }, { ack: true });
+      }, 1000);
     });
 
   });

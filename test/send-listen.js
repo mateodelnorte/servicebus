@@ -46,18 +46,19 @@ describe('servicebus', function(){
 
     it('can handle high event throughput', function (done){
       this.timeout(30000);
-      var count = 0, endCount = 5000;
+      var count = 0, endCount = 15000;
       function tryDone(){
         count++;
         if (count > endCount) {
           done();
         }
       }
+      var i = 0;
       bus.listen('my.event.3', function (event) {
         tryDone();
       });
       setTimeout(function () {
-        for(var i = 0; i <= endCount; ++i){
+        for(var i = 0; i <= endCount; ++i) {
           bus.send('my.event.3', { my: 'event' });
         };
       }, 100);
@@ -78,10 +79,10 @@ describe('servicebus', function(){
         event.handle.ack();
       });
       setTimeout(function () {
-        bus.send('my.event.4', { my: 'event' });
-        bus.send('my.event.4', { my: 'event' });
-        bus.send('my.event.4', { my: 'event' });
-        bus.send('my.event.4', { my: 'event' });
+        bus.send('my.event.4', { my: Math.random() }, { ack: true });
+        bus.send('my.event.4', { my: Math.random() }, { ack: true });
+        bus.send('my.event.4', { my: Math.random() }, { ack: true });
+        bus.send('my.event.4', { my: Math.random() }, { ack: true });
       }, 10);
     });
 
