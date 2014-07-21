@@ -87,6 +87,7 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
           }
           // todo: map contentType to default formatters
           message.content = options.formatter.deserialize(message.content);
+          options.queueType = 'pubsubqueue';
           self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
              callback(message.content);
           });
