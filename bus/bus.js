@@ -15,33 +15,35 @@ Bus.prototype.use = function (middleware) {
   return this;
 }
 
-Bus.prototype.handleIncoming = function (message, headers, deliveryInfo, messageHandle, options, callback) {
+Bus.prototype.handleIncoming = function (/* channel, message, options, callback */) {
   var index = this.incomingMiddleware.length - 1;
   var self = this;
 
+  var args = Array.prototype.slice.call(arguments);
+
+  var callback = args.pop();
+
   function next (err) {
-    if (err) throw err; // at this point we don't have a mechanism for providing an error-aware callback to sends and publishes, 
-                        // so we'll throw. in the future we can check for the presense of one and throw if it's not provided
+    if (err) return callback(err);
 
     var layer;
     var args = Array.prototype.slice.call(arguments, 1);
 
-    message = (args.length > 1) ? args[0] : message;
-    headers = (args.length > 1) ? args[1] : headers;
-    deliveryInfo = (args.length > 1) ? args[2] : deliveryInfo;
-    messageHandle = (args.length > 1) ? args[3] : messageHandle;
-    options = (args.length > 1) ? args[3] : options;
+    layer = self.incomingMiddleware[index];
 
-    layer = self.incomingMiddleware[index--];
+    index = index - 1;
 
     if ( undefined === layer) {
-      return callback(message, headers, deliveryInfo, messageHandle, options);
+      return callback.apply(self, args);
     } else {
-      layer.call(self, message, headers, deliveryInfo, messageHandle, options, next);
+      args.push(next);
+      return layer.apply(self, args);
     }
   }
 
-  next();
+  args.unshift(null);
+
+  return next.apply(this, args);
 }
 
 Bus.prototype.handleOutgoing = function (queueName, message, callback) {
@@ -49,28 +51,26 @@ Bus.prototype.handleOutgoing = function (queueName, message, callback) {
   var index = 0;
   var self = this;
 
+
   function next (err) {
-    if (err) throw err; // at this point we don't have a mechanism for providing a callback to sends and publishes, 
-                        // so we'll throw. in the future we can check for the presense of one and throw if it's not provided
+    if (err) return callback(err); 
 
     var layer;
     var args = Array.prototype.slice.call(arguments, 1);
-
-    queueName = (args.length > 1) ? args[0] : queueName;
-    message = (args.length > 1) ? args[1] : message;
 
     layer = self.outgoingMiddleware[index];
 
     index++;
 
     if ( undefined === layer) {
-      return callback(queueName, message);
+      return callback.apply(self, args);
     } else  {
-      layer.call(self, queueName, message, next);
+      args.push(next);
+      return layer.apply(self, args);
     } 
   }
 
-  next(null, queueName, message);
+  return next(null, queueName, message);
 }
 
 Bus.prototype.correlate = require('./middleware/correlate');

@@ -9,23 +9,24 @@ function Queue (options) {
 
   extend(queueOptions, {
     autoDelete: ! (options.ack || options.acknowledge),
-    durable: options.ack || options.acknowledge
+    contentType: options.contentType || 'application/json',
+    durable: Boolean(options.ack || options.acknowledge),
+    exclusive: options.exclusive || false,
+    persistent: Boolean(options.ack || options.acknowledge || options.persistent)
   });
 
+  this.ack = (options.ack || options.acknowledge);
   this.bus = options.bus;
-  this.connection = options.connection;
   this.errorQueueName = options.queueName + '.error';
-  this.initialized = false;
+  this.formatter = options.formatter;
+  this.listenChannel = options.listenChannel;
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
   this.queueName = options.queueName;
+  this.queueOptions = queueOptions;
   this.rejected = {};
   this.routingKey = options.routingKey;
-  this.contentType = options.contentType || 'application/json';
-  this.deliveryMode = (options.ack || options.acknowledge || options.persistent) 
-    ? 2 
-    : 1; // default to non-persistent messages
-  this.ack = (options.ack || options.acknowledge);
+  this.sendChannel = options.sendChannel;
 
   EventEmitter.call(this);
 
@@ -34,26 +35,18 @@ function Queue (options) {
   this.initialized = Promise.all([
     // we're initialized when our queues are bound
     new Promise(function (resolve, reject) {
-      self.log('connecting to queue ' + self.queueName);
-      self.queue = self.connection.queue(self.queueName, queueOptions, function () {
-        self.log('binding to routingKey ' + self.routingKey || self.queueName);
-        self.queue.bind(self.routingKey || self.queueName);
-        self.queue.on('queueBindOk', function() {
-          self.log('bound to queue ' + self.queueName);
-          resolve();
-        });
+      self.log('asserting queue ' + self.queueName);
+      self.listenChannel.assertQueue(self.queueName, self.queueOptions)
+      .then(function (_qok) {
+        resolve();
       });
     }),
     new Promise(function (resolve, reject) {
       if (self.ack) {
-        queueOptions.durable = true;
-        queueOptions.autoDelete = false;
-        self.errorQueue = self.connection.queue(self.queueName + '.error', queueOptions, function (eq) {
-          eq.bind(self.errorQueueName);
-          eq.on('queueBindOk', function () {
-            self.log('bound to ' + self.errorQueueName);  
-            resolve();
-          });
+        self.log('asserting error queue ' + self.errorQueueName);
+        self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions)
+        .then(function (_qok) {
+          resolve();
         });
       } else {
         resolve();
@@ -68,9 +61,11 @@ function Queue (options) {
 
 util.inherits(Queue, EventEmitter);
 
-Queue.prototype.error = function error (event) {
+Queue.prototype.error = function error (event, options) {
   this.log('Message moved to error queue: ' + this.errorQueueName);
-  this.connection.publish(this.errorQueueName, event, { contentType: 'application/json', deliveryMode: 2 });
+  this.initialized.done(function () {
+    self.sendChannel.sendToQueue(this.errorQueueName, new Buffer(options.formatter.serialize(event)));
+  });
 };
 
 Queue.prototype.listen = function listen (callback, options) {
@@ -79,40 +74,75 @@ Queue.prototype.listen = function listen (callback, options) {
   
   var self = this;
   
-  this.log('listening to queue ' + this.queueName + ' with options ' + util.inspect(options));
+  this.log('listening to queue ' + this.queueName);
 
   this.initialized.done(function () {
-    self.queue.subscribe(options, function (message, headers, deliveryInfo, messageHandle) {
-      self.bus.handleIncoming(message, headers, deliveryInfo, messageHandle, options, function (message, headers, deliveryInfo, messageHandle, options) {
-         callback(message, headers, deliveryInfo, messageHandle, options);
+    var i = 0;
+    self.listenChannel.consume(self.queueName, function (message) {
+      /*
+          Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html 
+          & http://www.rabbitmq.com/consumer-cancel.html: 
+
+          If the consumer is cancelled by RabbitMQ, the message callback will be invoked with null.
+        */
+      if (message === null) {
+        return; 
+      }
+      message.content = options.formatter.deserialize(message.content);
+      options.queueType = 'queue';
+      self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
+         callback(message.content);
       });
-    }).on('success', function (subscription) {
-      self.subscription = subscription;
-    });
+    }, { noAck: ! self.ack })
+      .then(function (ok) {
+        self.subscription = { consumerTag: ok.consumerTag };
+      });
   });
 };
 
 Queue.prototype.destroy = function destroy (options) {
   options = options || {};
-  if ( ! options.preserveErrorQueue && this.errorQueue) this.errorQueue.destroy(options);
-  return this.queue.destroy(options);
+  var em = new EventEmitter();
+  this.log('deleting queue %s', this.queueName);
+  this.listenChannel.deleteQueue(this.queueName)
+    .then(function (ok) {
+      em.emit('success');
+    });
+  if (this.errorQueueName && this.ack) {
+    this.listenChannel.deleteQueue(this.errorQueueName, { ifEmpty: true });
+  }
+  return em;
 }
 
 Queue.prototype.unlisten = function unlisten () {
+  var em = new EventEmitter();
+  var self = this;
+
   if (this.subscription) {
-    return this.queue.unsubscribe(this.subscription.consumerTag);
+    this.listenChannel.cancel(this.subscription.consumerTag)
+      .then(function (err, ok) {
+      delete self.subscription;
+      em.emit('success');
+    });
   } else {
     throw new Error('Attempted to unlisten a queue that is not yet listening.');
   }
+
+  return em;
 }
 
 Queue.prototype.send = function send (event, options) {
+  options = options || {};
   var self = this;
+
+  extend(options, {
+    contentType: this.contentType,
+    formatter: this.formatter,
+    persistent: Boolean(options.ack || options.acknowledge || options.persistent || self.ack)
+  });
+
   this.initialized.done(function () {
-    self.connection.publish(self.routingKey || self.queueName, event, { 
-      contentType: self.contentType, 
-      deliveryMode: self.deliveryMode
-    });
+    self.sendChannel.sendToQueue(self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options);
   });
 };
 

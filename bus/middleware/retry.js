@@ -1,6 +1,7 @@
 var log = require('debug')('servicebus:retry');
-var maxRetries = 10, rejected = {};
 var util = require('util');
+
+var maxRetries = 5;
 
 module.exports = function (options) {
   options = options || {};
@@ -9,36 +10,53 @@ module.exports = function (options) {
 
   return {
 
-    handleIncoming: function retry (message, headers, deliveryInfo, messageHandle, options, next) {
+    handleIncoming: function retry (channel, message, options, next) {
 
-      var bus = this;
-      
       if (options && options.ack) {
 
-        message.handle = {
-          ack: function () { messageHandle.acknowledge(); },
-          acknowledge: function () { messageHandle.acknowledge(); },
+        message.content.handle = {
+          ack: function () { 
+            channel.ack(message); 
+          },
+          acknowledge: function () { 
+            channel.ack(message); 
+          },
           reject: function () {
-            if (rejected[message.cid] == undefined) {
-              rejected[message.cid] = 1
+
+            var rejected = message.content.handle.rejected + 1;
+
+            if (rejected > maxRetries) {
+
+              var errorQueueName = util.format('%s.error', message.fields.routingKey);
+
+              log('sending message %s to error queue %s', message.content.cid, errorQueueName);
+
+              channel.sendToQueue(errorQueueName, new Buffer(JSON.stringify(message.content)), options);
+              channel.nack(message, false, false); 
+
             } else {
-              rejected[message.cid] = rejected[message.cid] + 1;
+
+              log('retrying message %s', message.content.cid);
+
+              message.content.handle.rejected = rejected;
+
+              channel.nack(message, false, false);
+
+              if (options.queueType === 'queue') {
+                channel.sendToQueue(message.fields.routingKey, new Buffer(JSON.stringify(message.content)), options);
+              } else {
+                channel.publish(message.fields.exchange, message.fields.routingKey, new Buffer(JSON.stringify(message.content)), options);
+              }
+              
             }
-            if (rejected[message.cid] > maxRetries) {
-              var errorQueueName = util.format('%s.error', deliveryInfo.queue);
-              log('sending message %s to error queue %s', message.cid, errorQueueName);
-              bus.connection.publish(errorQueueName, message, { contentType: 'application/json', deliveryMode: 2 });
-              messageHandle.acknowledge();
-              delete rejected[message.cid];
-            } else {
-              log('retrying message %s', message.cid);
-              messageHandle.reject(true);
-            }
-          }
+
+          },
+          rejected: (message.content.handle) ? message.content.handle.rejected : 0
         };
+
       }
-      
-      next(null, message, headers, deliveryInfo, messageHandle, options);
+
+      next(null, channel, message, options);
     }
 
   };
