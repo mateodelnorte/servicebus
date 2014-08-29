@@ -1,7 +1,6 @@
 var events = require('events');
 var extend = require('extend');
 var newId = require('node-uuid').v4;
-var Serializer = require('./serializer');
 var util = require('util');
 
 function PubSubQueue (options) {
@@ -11,7 +10,7 @@ function PubSubQueue (options) {
   var queueOptions = options.queueOptions || {};
 
   extend(queueOptions, {
-    autoDelete: true,//! Boolean(options.ack || options.acknowledge,
+    autoDelete: ! (options.ack || options.acknowledge),
     contentType: options.contentType || 'application/json',
     durable: Boolean(options.ack || options.acknowledge),
     exclusive: options.exclusive || false,
