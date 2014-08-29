@@ -5,12 +5,15 @@ var events = require('events'),
     path = require('path'),
     Promise = require('bluebird'),
     util = require('util');
+var warn = require('debug')('servicebus:warn');
 
 var queues = {};
 
 function Correlator (options) {
   var self = this;
   // note: if you want to cluster servicebus, provide a 'queuesfile' option param when calling .bus(options). you'll likely do a mod of the cluster.worker.id in your cluster.js file when you call fork();
+  if (cluster.isWorker && options.queuesFile === undefined) warn('Warning, to use subscriptions in a clustered app, you should specify a queuesFile option when calling .bus(options). You may want to provide something like util.format(\'.queues.worker.%s\', (cluster.worker.id % cluster.workers.length)).');
+
   this.filename =
     (options && options.queuesFile) ? path.join(process.cwd(), options.queuesFile)
       : (cluster.isWorker) ? path.join(process.cwd(), util.format('.queues.worker.%s', cluster.worker.id))
