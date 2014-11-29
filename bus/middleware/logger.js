@@ -1,16 +1,16 @@
 var debug = require('debug'),
     util = require('util');
 
-module.exports = function (label, fnIncoming, fnOutgoing) {
-  label = label || 'servicebus';
-  fnIncoming = fnIncoming || function (channel, message, options, next) {
-    log('received %j via routingKey %s', message.content, message.fields.routingKey);
+module.exports = function (options) {
+  options = options || {};
+  label = options.label || 'servicebus';
+  var log = options.log || debug(label);
+  fnIncoming = options.fnIncoming || function (channel, message, options, next) {
+    log(util.format('received %j via routingKey %s', message.content, message.fields.routingKey));
   };
-  fnOutgoing = fnOutgoing || function (message, queueName) {
-    log('sending %j to %s', message, queueName);
+  fnOutgoing = options.fnOutgoing || function (message, queueName) {
+    log(util.format('sending %j to %s', message, queueName));
   };
-
-  var log = debug(label);
 
   function logIncoming (channel, message, options, next) {
     fnIncoming(channel, message, options);

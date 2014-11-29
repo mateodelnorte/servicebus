@@ -53,7 +53,7 @@ function Queue (options) {
       }
     })
   ]).catch(function (err) {
-    self.log('error connecting to queue ', options.queueName, '. error: ' + err.toString());
+    self.log('error connecting to queue ' + options.queueName + '. error: ' + err.toString());
     self.emit('error', err);
   });
 
@@ -103,7 +103,7 @@ Queue.prototype.listen = function listen (callback, options) {
 Queue.prototype.destroy = function destroy (options) {
   options = options || {};
   var em = new EventEmitter();
-  this.log('deleting queue %s', this.queueName);
+  this.log('deleting queue ' + this.queueName);
   this.listenChannel.deleteQueue(this.queueName)
     .then(function (ok) {
       em.emit('success');
@@ -112,7 +112,7 @@ Queue.prototype.destroy = function destroy (options) {
     this.listenChannel.deleteQueue(this.errorQueueName, { ifEmpty: true });
   }
   return em;
-}
+};
 
 Queue.prototype.unlisten = function unlisten () {
   var em = new EventEmitter();
@@ -129,7 +129,7 @@ Queue.prototype.unlisten = function unlisten () {
   }
 
   return em;
-}
+};
 
 Queue.prototype.send = function send (event, options) {
   options = options || {};

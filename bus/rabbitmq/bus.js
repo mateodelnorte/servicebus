@@ -35,7 +35,7 @@ function RabbitMQBus (options) {
 
   this.initialized = new Promise(function (resolve, reject) {
 
-    log('connecting to rabbitmq on ' + url);
+    self.log('connecting to rabbitmq on ' + url);
 
     amqp.connect(url).then(function (conn) {
       
@@ -76,11 +76,11 @@ function RabbitMQBus (options) {
       });
 
     }).then(function () {
-      self.log('connected to rabbitmq on ', url);
+      self.log('connected to rabbitmq on ' + url);
       self.emit('ready');
     }, function (err) {
       reject(err);
-      self.log('error connecting to rabbitmq: ', err);
+      self.log('error connecting to rabbitmq: ' + err);
       self.emit('error', err);
     });
 
@@ -94,7 +94,7 @@ util.inherits(RabbitMQBus, Bus);
 RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
   var self = this;
   
-  log('listen on queue ' + queueName);
+  self.log('listen on queue ' + queueName);
   
   if (typeof options === "function") {
     callback = options;
@@ -106,7 +106,7 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
     self.setOptions(queueName, options);
 
     if (self.queues[options.queueName] === undefined) {
-      log('creating queue ' + options.queueName);
+      self.log('creating queue ' + options.queueName);
       self.queues[options.queueName] = new Queue(options);
     }
 
@@ -193,7 +193,7 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
 
   return {
     unsubscribe: _unsubscribe
-  }
+  };
 
 };
 
@@ -206,11 +206,11 @@ RabbitMQBus.prototype.publish = function publish (queueName, message, options) {
     self.setOptions(queueName, options);
     
     if (self.pubsubqueues[options.queueName] === undefined) {
-      log('creating pubsub queue ' + options.queueName);
+      self.log('creating pubsub queue ' + options.queueName);
       self.pubsubqueues[options.queueName] = new PubSubQueue(options);
     }
     self.handleOutgoing(options.queueName, message, function (queueName, message) {
-      log('publishing ' + queueName + ' event ' + util.inspect(message));
+      self.log('publishing ' + queueName + ' event ' + util.inspect(message));
       self.pubsubqueues[queueName].publish(message, options);
     });
 
