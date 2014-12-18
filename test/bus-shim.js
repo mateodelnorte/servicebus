@@ -11,5 +11,6 @@ bus.use(bus.package());
 bus.use(bus.correlate());
 bus.use(bus.logger());
 bus.use(bus.retry());
+bus.use(bus.property());
 
 module.exports.bus = bus;
