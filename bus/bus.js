@@ -77,5 +77,6 @@ Bus.prototype.correlate = require('./middleware/correlate');
 Bus.prototype.logger = require('./middleware/logger');
 Bus.prototype.package = require('./middleware/package');
 Bus.prototype.retry = require('./middleware/retry');
+Bus.prototype.property = require('./middleware/property');
 
 module.exports = Bus;
