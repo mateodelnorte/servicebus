@@ -13,7 +13,7 @@ Bus.prototype.use = function (middleware) {
   if (middleware.handleIncoming) this.incomingMiddleware.push(middleware.handleIncoming);
   if (middleware.handleOutgoing) this.outgoingMiddleware.push(middleware.handleOutgoing);
   return this;
-}
+};
 
 Bus.prototype.handleIncoming = function (/* channel, message, options, callback */) {
   var index = this.incomingMiddleware.length - 1;
@@ -44,7 +44,7 @@ Bus.prototype.handleIncoming = function (/* channel, message, options, callback 
   args.unshift(null);
 
   return next.apply(this, args);
-}
+};
 
 Bus.prototype.handleOutgoing = function (queueName, message, callback) {
   
@@ -71,12 +71,11 @@ Bus.prototype.handleOutgoing = function (queueName, message, callback) {
   }
 
   return next(null, queueName, message);
-}
+};
 
 Bus.prototype.correlate = require('./middleware/correlate');
 Bus.prototype.logger = require('./middleware/logger');
 Bus.prototype.package = require('./middleware/package');
 Bus.prototype.retry = require('./middleware/retry');
-Bus.prototype.property = require('./middleware/property');
 
 module.exports = Bus;

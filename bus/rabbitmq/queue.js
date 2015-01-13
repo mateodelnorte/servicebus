@@ -4,7 +4,7 @@ var Promise = require('bluebird');
 var util = require('util');
 
 function Queue (options) {
-  var options = options || {};
+  options = options || {};
   var queueOptions = options.queueOptions || {};
 
   extend(queueOptions, {
@@ -69,8 +69,8 @@ Queue.prototype.error = function error (event, options) {
 };
 
 Queue.prototype.listen = function listen (callback, options) {
-  var options = options || {},
-      queueOptions = options.queueOptions || {};
+  options = options || {};
+  queueOptions = options.queueOptions || {};
   
   var self = this;
   
@@ -91,7 +91,7 @@ Queue.prototype.listen = function listen (callback, options) {
       message.content = options.formatter.deserialize(message.content);
       options.queueType = 'queue';
       self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
-         callback(message.content);
+         callback(message.content, message);
       });
     }, { noAck: ! self.ack })
       .then(function (ok) {

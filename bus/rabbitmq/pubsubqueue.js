@@ -4,8 +4,7 @@ var newId = require('node-uuid').v4;
 var util = require('util');
 
 function PubSubQueue (options) {
-
-  var options = options || {};
+  options = options || {};
   var exchangeOptions = options.exchangeOptions || {};
   var queueOptions = options.queueOptions || {};
 
@@ -40,9 +39,9 @@ function PubSubQueue (options) {
   this.sendChannel = options.sendChannel;
 
   // set a promise in order to chain off of initilized?
-  this.log('asserting exchange %s', this.exchangeName)
+  this.log('asserting exchange %s', this.exchangeName);
   this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
-};
+}
 
 PubSubQueue.prototype.publish = function publish (event, options) {
   options = options || {};
@@ -88,19 +87,19 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
           message.content = options.formatter.deserialize(message.content);
           options.queueType = 'pubsubqueue';
           self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
-             callback(message.content);
+             callback(message.content, message);
           });
         }, { noAck: ! self.ack })
           .then(function (ok) {
             self.subscription = { consumerTag: ok.consumerTag };
-          });;
+          });
       });
 
   });
 
   return {
     unsubscribe: _unsubscribe
-  }
+  };
 };
 
 module.exports = PubSubQueue;
