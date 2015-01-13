@@ -7,6 +7,7 @@ var busUrl = process.env.RABBITMQ_URL;
 
 var bus = require('../').bus({ url: busUrl });
 
+bus.use(bus.messageDomain());
 bus.use(bus.package());
 bus.use(bus.correlate());
 bus.use(bus.logger());

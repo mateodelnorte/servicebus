@@ -12,4 +12,4 @@ module.exports.namedBus = function namedBus(name, options, implOpts) {
     bus = namedBuses[name] = new rabbitmq.Bus(options, implOpts);
   }
   return bus;
-}
+};

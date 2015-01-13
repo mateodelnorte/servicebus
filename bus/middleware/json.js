@@ -6,10 +6,7 @@ module.exports = function (options) {
       try {
         message.content = JSON.parse(message.content.toString());
       } catch (err) {
-        console.log(typeof message.content, err)
-        console.trace()
-        process.exit()
-        return next(err)
+        return next(err);
       }
 
       next(null, channel, message, options);
@@ -19,5 +16,5 @@ module.exports = function (options) {
       next(null, queueName, message);
     }
 
-  }
-}
+  };
+};
