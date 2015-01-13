@@ -1,6 +1,6 @@
 var domain = require('domain');
 
-module.exports = function domainPerMessage (options) {
+module.exports = function messageDomain (options) {
 
   return {
 
