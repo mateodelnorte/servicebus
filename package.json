@@ -7,7 +7,7 @@
   ],
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
-  "version": "1.0.0-rc5",
+  "version": "1.0.0-rc6",
   "homepage": "https://github.com/mateodelnorte/servicebus",
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
     "bluebird": "^1.0.8",
     "debug": "^0.7.4",
     "extend": "^1.2.1",
-    "node-uuid": "^1.4.0"
+    "node-uuid": "^1.4.0",
+    "readable-id": "0.0.2"
   },
   "devDependencies": {
     "longjohn": "~0.2.0",

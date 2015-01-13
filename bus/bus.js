@@ -1,4 +1,5 @@
 var EventEmitter = require('events').EventEmitter;
+var readableId = require('readable-id');
 var util = require('util');
 
 function Bus () {
@@ -78,5 +79,9 @@ Bus.prototype.messageDomain = require('./middleware/messageDomain');
 Bus.prototype.logger = require('./middleware/logger');
 Bus.prototype.package = require('./middleware/package');
 Bus.prototype.retry = require('./middleware/retry');
+
+Bus.prototype.createCorrelationId = function() {
+  return readableId();
+};
 
 module.exports = Bus;
