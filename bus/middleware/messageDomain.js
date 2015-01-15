@@ -10,15 +10,15 @@ module.exports = function messageDomain (opts) {
       
       var d = domain.create();
      
-      // if (!!!!opts.onError) {
+      if (opts.onError) {
         d.on('error', function (err) {
           if (opts.onError) {
-            opts.onError(err, d);
+            opts.onError(err, message, channel, d);
           } else {
             throw err;
           }
         });
-      // }
+      }
 
       d.run(function() {
 
