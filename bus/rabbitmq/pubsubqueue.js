@@ -63,8 +63,8 @@ PubSubQueue.prototype.publish = function publish (event, options) {
 PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
   var self = this;
 
-  function _unsubscribe (options) {
-    self.listenChannel.cancel(self.subscription.consumerTag, options);
+  function _unsubscribe (cb) {
+    self.listenChannel.cancel(self.subscription.consumerTag, cb);
   }
 
   this.correlator.queueName(options, function (err, uniqueName) {

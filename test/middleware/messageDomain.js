@@ -29,4 +29,27 @@ describe('messageDomain', function() {
     }, 1000);
   });
 
+  /* TODO: determine which resources are being shared between buses and fix the following to work with all tests, in addition to by itself (which it is now) */
+  xit('should catch errors with domains when onError supplied', function (done) {
+    var busUrl = process.env.RABBITMQ_URL;
+
+    var domainBus = require('../../').bus({ url: busUrl });
+
+    function onError (err, domain) {
+      err.should.have.property('message', 'domain error');
+      done();
+    }
+
+    domainBus.use(domainBus.messageDomain({
+      onError: onError
+    }));
+
+    domainBus.listen('my.message.domain.3', function (msg) {
+      throw new Error('domain error');
+    });
+    setTimeout(function () {
+      domainBus.send('my.message.domain.3', { my: 'message' });
+    });
+  });
+
 });

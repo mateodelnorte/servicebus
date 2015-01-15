@@ -1,5 +1,5 @@
 var noop = function () {};
-var log = require('debug')('servicebus:test')
+var log = require('debug')('servicebus:test');
 var bus = require('../bus-shim').bus;
 
 var should = require('should');
@@ -20,8 +20,11 @@ describe('retry', function() {
       });
       bus.listen('my.event.5.error', { ack: true }, function (event) {
         count.should.equal(6); // one send and five retries
-        bus.destroyListener('my.event.5.error').on('success', function () {
-          done();
+        event.handle.ack();
+        bus.destroyListener('my.event.5').on('success', function () {
+          bus.destroyListener('my.event.5.error').on('success', function () {
+            done();
+          });
         });
       });
       setTimeout(function () {
@@ -35,15 +38,18 @@ describe('retry', function() {
 
     it('rejected messages should retry until max retries', function (done){
       var count = 0;
-      bus.subscribe('my.event.15', { ack: true }, function (event) {
+      var subscription = bus.subscribe('my.event.15', { ack: true }, function (event) {
         count++;
         event.handle.reject();
       });
       bus.listen('my.event.15.error', { ack: true }, function (event) {
         count.should.equal(6); // one send and five retries
-        bus.destroyListener('my.event.15.error').on('success', function () {
-          done();
-        });
+        event.handle.ack();
+        // subscription.unsubscribe(function () {
+          bus.destroyListener('my.event.15.error').on('success', function () {
+            done();
+          });
+        // });
       });
       setTimeout(function () {
         bus.publish('my.event.15', { data: Math.random() }, { ack: true });
