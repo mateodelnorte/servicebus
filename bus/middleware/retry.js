@@ -17,22 +17,18 @@ function retryLocal (channel, message, options, next) {
         channel.ack(message);  
       },
       reject: function () {
-console.log(localRejected)
         if (localRejected[message.content.cid] === undefined) {
           localRejected[message.content.cid] = 1;
         } else {
           localRejected[message.content.cid] = localRejected[message.content.cid] + 1;
         }
-console.log(localRejected)
         if (localRejected[message.content.cid] > maxRetries) {
-console.log('max')
-          var errorQueueName = util.format('%s.error', deliveryInfo.queue);
+          var errorQueueName = util.format('%s.error', message.fields.routingKey);
           log('sending message %s to error queue %s', message.content.cid, errorQueueName);
           channel.sendToQueue(errorQueueName, new Buffer(JSON.stringify(message.content)), extend(options, { headers: { rejected: localRejected[message.content.cid] } }));
           channel.reject(message, false); 
           delete localRejected[message.content.cid];
         } else {
-console.log('notmax', localRejected)
           log('retrying message %s', message.content.cid);
           channel.reject(message, true); 
         }

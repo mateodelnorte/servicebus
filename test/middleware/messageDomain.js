@@ -52,4 +52,37 @@ describe('messageDomain', function() {
     });
   });
 
+  /* TODO: determine which resources are being shared between buses and fix the following to work with all tests, in addition to by itself (which it is now) */
+  xit('should send to error queue after five retries', function (done) {
+    var busUrl = process.env.RABBITMQ_URL;
+
+    var domainBus = require('../../').bus({ url: busUrl });
+
+    function onError (err, domain) {
+      err.should.have.property('message', 'domain error');
+      done();
+    }
+
+    domainBus.use(domainBus.messageDomain({ onError: onError }));
+    domainBus.use(domainBus.retry({ localOnly: true }));
+
+    var count = 0;
+    domainBus.listen('my.message.domain.4', { ack: true }, function (event) {
+      count++;
+      event.handle.reject();
+    });
+    domainBus.listen('my.message.domain.4.error', { ack: true }, function (event) {
+      count.should.equal(6); // one send and five retries
+      event.handle.ack();
+      domainBus.destroyListener('my.message.domain.4').on('success', function () {
+        domainBus.destroyListener('my.message.domain.4.error').on('success', function () {
+          done();
+        });
+      });
+    });
+    setTimeout(function () {
+      domainBus.send('my.message.domain.4', { my: 'event' });
+    }, 100);
+  });
+
 });
