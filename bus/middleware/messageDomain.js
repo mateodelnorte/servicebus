@@ -9,7 +9,7 @@ module.exports = function messageDomain (opts) {
     handleIncoming: function json (channel, message, options, next) {
       
       var d = domain.create();
-     
+      
       if (opts.onError) {
         d.on('error', function (err) {
           if (opts.onError) {
@@ -26,7 +26,7 @@ module.exports = function messageDomain (opts) {
           d.correlationId = message.properties.correlationId;
         }
 
-        d.bind(next.bind(this, null, channel, message, options))();
+        next.bind(this, null, channel, message, options)();
         
       });
 
