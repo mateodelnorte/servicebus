@@ -26,7 +26,7 @@ function createOnly (method, max) {
 function retryLocal (channel, message, options, next) {
 
   var onlyAckOnce = createOnly('ack', 1);
-  var onlyRejectMax = createOnly('reject', maxRetries - 1);
+  var onlyRejectMax = createOnly('reject', maxRetries);
 
   if (options && options.ack) {
 
