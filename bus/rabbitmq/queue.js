@@ -91,7 +91,20 @@ Queue.prototype.listen = function listen (callback, options) {
       message.content = options.formatter.deserialize(message.content);
       options.queueType = 'queue';
       self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
+        // amqplib intercepts errors and closes connections before bubbling up
+        // to domain error handlers when they occur non-asynchronously within
+        // callback. Therefore, if there is a process domain, we try-catch to
+        // redirect the error, assuming the domain creator's intentions.
+
+        try {
          callback(message.content, message);
+        } catch (err) {
+          if (process.domain && process.domain.listeners('error')) {
+            process.domain.emit('error', err);
+          } else {
+            throw err;
+          }
+        }
       });
     }, { noAck: ! self.ack })
       .then(function (ok) {
