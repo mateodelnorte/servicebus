@@ -127,7 +127,9 @@ RabbitMQBus.prototype.destroyListener = function removeListener (queueName) {
   if (this.queues[queueName] === undefined) {
     throw new Error('no queue currently listening at ' + queueName);
   } else {
-    return this.queues[queueName].destroy();
+    var q = this.queues[queueName];
+    delete this.queues[queueName];
+    return q.destroy();
   }
 };
 
