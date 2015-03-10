@@ -141,9 +141,15 @@ Queue.prototype.send = function send (event, options) {
     persistent: Boolean(options.ack || options.acknowledge || options.persistent || self.ack)
   });
 
-  this.initialized.done(function () {
+  // if our promise is already fulfilled, send synchrnoously. if this is our first send, queue it up for when innitialized resolves
+  if ( ! this.initialized.isFulfilled()) {
+    this.initialized.done(function () {
+      self.sendChannel.sendToQueue(self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options);
+    });
+  } else {
     self.sendChannel.sendToQueue(self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options);
-  });
+  }
+  
 };
 
 module.exports = Queue;

@@ -55,9 +55,8 @@ PubSubQueue.prototype.publish = function publish (event, options) {
     persistent: Boolean(options.ack || options.acknowledge || options.persistent || self.ack)
   });
   
-  setImmediate(function () {
-    self.sendChannel.publish(self.exchangeName, self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options);
-  });
+  self.sendChannel.publish(self.exchangeName, self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options);
+  
 };
 
 PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
