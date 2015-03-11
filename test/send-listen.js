@@ -143,17 +143,21 @@ describe('servicebus', function(){
   describe('#destroyListener', function() {
 
     it('should cause message to not be received by listen', function (done){
-      bus.listen('my.event.18', { ack: true }, function (event) { 
+      bus.listen('my.event.18', function (event) { 
         done(new Error('should not receive events after destroy'));
       });
       setTimeout(function () {
-        bus.destroyListener('my.event.18').on('success', function () {
+        bus.destroyListener('my.event.18', true).on('success', function () {
           bus.send('my.event.18', { test: 'data'});
-          setTimeout(done, 100);
+          setTimeout(function () {
+            bus.destroyListener('my.event.18', true).on('success', function () {
+              done();
+            });
+          }, 500);
         });
-      }, 1500);
+      }, 200);
     });
 
   });
 
-})
+});

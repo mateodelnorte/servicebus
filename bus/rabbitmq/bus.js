@@ -123,13 +123,13 @@ RabbitMQBus.prototype.unlisten = function unlisten (queueName, options) {
   }
 };
 
-RabbitMQBus.prototype.destroyListener = function removeListener (queueName) {  
+RabbitMQBus.prototype.destroyListener = function destroyListener (queueName, deleteErrorQueue) {  
   if (this.queues[queueName] === undefined) {
     throw new Error('no queue currently listening at ' + queueName);
   } else {
     var q = this.queues[queueName];
     delete this.queues[queueName];
-    return q.destroy();
+    return q.destroy(deleteErrorQueue);
   }
 };
 
@@ -151,7 +151,7 @@ RabbitMQBus.prototype.setOptions = function (queueName, options) {
     queuesFile: this.queuesFile,
     sendChannel: this.sendChannel
   });
-} 
+};
 
 RabbitMQBus.prototype.send = function send (queueName, message, options) {
   var self = this;

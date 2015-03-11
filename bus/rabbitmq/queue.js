@@ -112,8 +112,7 @@ Queue.prototype.listen = function listen (callback, options) {
   });
 };
 
-Queue.prototype.destroy = function destroy (options) {
-  options = options || {};
+Queue.prototype.destroy = function destroy (forceDeleteErrorQueue) {
   var em = new EventEmitter();
   this.log('deleting queue ' + this.queueName);
   this.listenChannel.deleteQueue(this.queueName)
@@ -121,7 +120,7 @@ Queue.prototype.destroy = function destroy (options) {
       em.emit('success');
     });
   if (this.errorQueueName && this.ack) {
-    this.listenChannel.deleteQueue(this.errorQueueName, { ifEmpty: true });
+    this.listenChannel.deleteQueue(this.errorQueueName, { ifEmpty: forceDeleteErrorQueue ? ! forceDeleteErrorQueue : true });
   }
   return em;
 };
