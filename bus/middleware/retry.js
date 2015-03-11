@@ -107,10 +107,12 @@ function retryDistributed (channel, message, options, next) {
 
           channel.reject(message, false);
 
+          options = extend(options, message.properties, { headers: { rejected: rejected } });
+
           if (options.queueType === 'queue') {
-            channel.sendToQueue(message.fields.routingKey, new Buffer(JSON.stringify(message.content)), extend(options, { headers: { rejected: rejected } }));
+            channel.sendToQueue(message.fields.routingKey, new Buffer(JSON.stringify(message.content)), options);
           } else {
-            channel.publish(message.fields.exchange, message.fields.routingKey, new Buffer(JSON.stringify(message.content)), extend(options, { headers: { rejected: rejected } }));
+            channel.publish(message.fields.exchange, message.fields.routingKey, new Buffer(JSON.stringify(message.content)), options);
           }
           
         }

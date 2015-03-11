@@ -6,7 +6,7 @@ module.exports = function messageDomain (opts) {
 
   return {
 
-    handleIncoming: function json (channel, message, options, next) {
+    handleIncoming: function messageDomain (channel, message, options, next) {
       
       var d = domain.create();
       
@@ -30,7 +30,7 @@ module.exports = function messageDomain (opts) {
         
       });
 
-    },
+    }
 
   };
 };
