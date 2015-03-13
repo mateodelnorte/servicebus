@@ -41,20 +41,6 @@ function PubSubQueue (options) {
 
   this.log('asserting exchange %s', this.exchangeName);
 
-  this.initialized = new Promise(function (resolve, reject) {
-    this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
-    this.correlator.queueName(options, function (err, uniqueName) {
-      if (err) return reject(err);
-      this.uniqueQueueName = uniqueName;
-      this.listenChannel.assertQueue(this.uniqueQueueName, this.queueOptions)
-        .then(function (qok) {
-          return this.listenChannel.bindQueue(this.uniqueQueueName, this.exchangeName, this.routingKey || this.queueName);
-        }.bind(this)).then(function () {
-          resolve(); 
-        }.bind(this)); 
-    }.bind(this));
-  }.bind(this));
-
 }
 
 PubSubQueue.prototype.publish = function publish (event, options) {
@@ -80,7 +66,21 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
     self.listenChannel.cancel(self.subscription.consumerTag, cb);
   }
 
-  Promise.all([this.initialized, new Promise(function (resolve, reject) {
+  var exchangeAndQueueInitialized = new Promise(function (resolve, reject) {
+    this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
+    this.correlator.queueName(options, function (err, uniqueName) {
+      if (err) return reject(err);
+      this.uniqueQueueName = uniqueName;
+      this.listenChannel.assertQueue(this.uniqueQueueName, this.queueOptions)
+        .then(function (qok) {
+          return this.listenChannel.bindQueue(this.uniqueQueueName, this.exchangeName, this.routingKey || this.queueName);
+        }.bind(this)).then(function () {
+          resolve(); 
+        }.bind(this)); 
+    }.bind(this));
+  }.bind(this));
+
+  var errorQueueInitialized = new Promise(function (resolve, reject) {
     if (options.ack === true) {
       return this.listenChannel.assertQueue(this.errorQueueName, this.queueOptions).then(function () {
         resolve();
@@ -88,7 +88,9 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
     } else {
       resolve();
     }
-  }.bind(this))]).done(function () {
+  }.bind(this));
+
+  Promise.all([exchangeAndQueueInitialized, errorQueueInitialized]).done(function () {
       self.listenChannel.consume(this.uniqueQueueName, function (message) {
         /*
             Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html 
