@@ -40,7 +40,7 @@ function PubSubQueue (options) {
   this.sendChannel = options.sendChannel;
 
   this.log('asserting exchange %s', this.exchangeName);
-
+  this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
 }
 
 PubSubQueue.prototype.publish = function publish (event, options) {
@@ -66,63 +66,55 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
     self.listenChannel.cancel(self.subscription.consumerTag, cb);
   }
 
-  var exchangeAndQueueInitialized = new Promise(function (resolve, reject) {
-    this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
-    this.correlator.queueName(options, function (err, uniqueName) {
+  new Promise(function (resolve, reject) {
+    self.correlator.queueName(options, function (err, uniqueName) {
       if (err) return reject(err);
-      this.uniqueQueueName = uniqueName;
-      this.listenChannel.assertQueue(this.uniqueQueueName, this.queueOptions)
+      self.listenChannel.assertQueue(uniqueName, self.queueOptions)
         .then(function (qok) {
-          return this.listenChannel.bindQueue(this.uniqueQueueName, this.exchangeName, this.routingKey || this.queueName);
-        }.bind(this)).then(function () {
-          resolve(); 
-        }.bind(this)); 
-    }.bind(this));
-  }.bind(this));
-
-  var errorQueueInitialized = new Promise(function (resolve, reject) {
-    if (options.ack === true) {
-      return this.listenChannel.assertQueue(this.errorQueueName, this.queueOptions).then(function () {
-        resolve();
-      });  
-    } else {
-      resolve();
-    }
-  }.bind(this));
-
-  Promise.all([exchangeAndQueueInitialized, errorQueueInitialized]).done(function () {
-      self.listenChannel.consume(this.uniqueQueueName, function (message) {
-        /*
-            Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html 
-            & http://www.rabbitmq.com/consumer-cancel.html: 
-
-            If the consumer is cancelled by RabbitMQ, the message callback will be invoked with null.
-          */
-        if (message === null) {
-          return; 
-        }
-        // todo: map contentType to default formatters
-        message.content = options.formatter.deserialize(message.content);
-        options.queueType = 'pubsubqueue';
-        self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
-          // amqplib intercepts errors and closes connections before bubbling up
-          // to domain error handlers when they occur non-asynchronously within
-          // callback. Therefore, if there is a process domain, we try-catch to
-          // redirect the error, assuming the domain creator's intentions.
-          try {
-            callback(message.content, message);
-          } catch (err) {
-            if (process.domain && process.domain.listeners('error')) {
-              process.domain.emit('error', err);
-            } else {
-              self.emit('error', err);
-            }
+          return self.listenChannel.bindQueue(uniqueName, self.exchangeName, self.routingKey || self.queueName);
+        }).then(function () {
+          if (options.ack === true) {
+            return self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions).then(function () {
+              resolve();
+            });  
+          } else {
+            resolve();
           }
-        });
-      }, { noAck: ! self.ack })
-        .then(function (ok) {
-          self.subscription = { consumerTag: ok.consumerTag };
-        });
+        }).then(function () {
+          self.listenChannel.consume(uniqueName, function (message) {
+            /*
+                Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html 
+                & http://www.rabbitmq.com/consumer-cancel.html: 
+
+                If the consumer is cancelled by RabbitMQ, the message callback will be invoked with null.
+              */
+            if (message === null) {
+              return; 
+            }
+            // todo: map contentType to default formatters
+            message.content = options.formatter.deserialize(message.content);
+            options.queueType = 'pubsubqueue';
+            self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
+              // amqplib intercepts errors and closes connections before bubbling up
+              // to domain error handlers when they occur non-asynchronously within
+              // callback. Therefore, if there is a process domain, we try-catch to
+              // redirect the error, assuming the domain creator's intentions.
+              try {
+                callback(message.content, message);
+              } catch (err) {
+                if (process.domain && process.domain.listeners('error')) {
+                  process.domain.emit('error', err);
+                } else {
+                  self.emit('error', err);
+                }
+              }
+            });
+          }, { noAck: ! self.ack })
+            .then(function (ok) {
+              self.subscription = { consumerTag: ok.consumerTag };
+            });
+          });
+        }); 
     });
 
   return {
