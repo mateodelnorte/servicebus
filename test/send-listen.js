@@ -144,11 +144,15 @@ describe('servicebus', function(){
 
     it('should cause message to not be received by listen', function (done){
       bus.listen('my.event.18', { ack: true }, function (event) { 
-        done(new Error('should not receive events after destroy'));
+        event.handle.ack();
+        // commence ugliest hack ever to get around rabbitmq queue consumer rules
+        setTimeout(function () {
+          done(new Error('should not receive events after destroy'));
+        }, 500);
       });
       setTimeout(function () {
         bus.destroyListener('my.event.18').on('success', function () {
-          bus.send('my.event.18', { test: 'data'});
+          bus.send('my.event.18', { test: 'data'}, { ack: true, expiration: 100 });
           setTimeout(done, 100);
         });
       }, 1500);

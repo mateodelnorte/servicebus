@@ -157,18 +157,25 @@ RabbitMQBus.prototype.send = function send (queueName, message, options) {
   var self = this;
   options = options || {};
 
-  this.initialized.done(function() {
-
+  function _send (queueName, message, options) {
     self.setOptions(queueName, options);
-
     if (self.queues[options.queueName] === undefined) {
       self.queues[options.queueName] = new Queue(options);
     }
     self.handleOutgoing(options.queueName, message, function (queueName, message) {
       self.queues[queueName].send(message, options);
     });
+  }
 
-  });
+  if ( ! this.initialized.isFulfilled()) {
+    self.initialized.done(function() {
+      _send(queueName, message, options);
+    });
+  } else {
+    _send(queueName, message, options);
+  }
+
+  
 };
 
 RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callback) {
@@ -203,10 +210,8 @@ RabbitMQBus.prototype.publish = function publish (queueName, message, options) {
   var self = this;
   options = options || {};
 
-  this.initialized.done(function() {
-
+  function _publish (queueName, message, options) {
     self.setOptions(queueName, options);
-    
     if (self.pubsubqueues[options.queueName] === undefined) {
       self.log('creating pubsub queue ' + options.queueName);
       self.pubsubqueues[options.queueName] = new PubSubQueue(options);
@@ -215,9 +220,15 @@ RabbitMQBus.prototype.publish = function publish (queueName, message, options) {
       self.log('publishing ' + queueName + ' event ' + util.inspect(message));
       self.pubsubqueues[queueName].publish(message, options);
     });
+  }
 
-  });
-
+  if ( ! this.initialized.isFulfilled()) {
+    this.initialized.done(function() {
+      _publish(queueName, message, options);
+    });
+  } else {
+    _publish(queueName, message, options);
+  }
 };
 
 module.exports.Bus = RabbitMQBus;
