@@ -99,7 +99,7 @@ describe('retry', function() {
         // });
       });
       setTimeout(function () {
-        bus.publish('my.event.15', { data: Math.random() }, { ack: true });
+        bus.publish('my.event.15', { data: Math.random() });
       }, 1000);
     });
 
