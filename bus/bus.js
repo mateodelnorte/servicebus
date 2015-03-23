@@ -80,7 +80,10 @@ Bus.prototype.logger = require('./middleware/logger');
 Bus.prototype.package = require('./middleware/package');
 Bus.prototype.retry = require('./middleware/retry');
 
-Bus.prototype.createCorrelationId = function() {
+Bus.prototype.createCorrelationId = Bus.prototype.correlationId = function (forceNew) {
+  if (process.domain && process.domain.correlationId && ! forceNew) {
+    return process.domain.correlationId;
+  }
   return readableId();
 };
 
