@@ -16,10 +16,10 @@ function RabbitMQBus (options) {
   var self = this;
 
   options = options || {};
-  options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
-  options.vhost = options.vhost || process.env.RABBITMQ_VHOST || '/';
   options.exchangeName = options.exchangeName || 'amq.topic';
   options.exchangeOptions = options.exchangeOptions || {};
+  options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
+  options.vhost = options.vhost || process.env.RABBITMQ_VHOST || '/';
 
   this.channels = [];
   this.correlator = new Correlator(options);  
@@ -62,6 +62,9 @@ function RabbitMQBus (options) {
       }
 
       self.connection.createChannel().then(function (channel) {
+        if (options.concurrency !== undefined) {
+          channel.prefetch(options.concurrency);
+        }
         channel.on('error', channelError);
         self.sendChannel = channel;
         self.channels.push(channel);
@@ -69,6 +72,9 @@ function RabbitMQBus (options) {
       });
 
       self.connection.createChannel().then(function (channel) {
+        if (options.concurrency !== undefined) {
+          channel.prefetch(options.concurrency);
+        }
         channel.on('error', channelError);
         self.listenChannel = channel;
         self.channels.push(channel);
