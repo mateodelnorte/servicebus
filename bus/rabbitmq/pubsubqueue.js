@@ -47,8 +47,6 @@ PubSubQueue.prototype.publish = function publish (event, options) {
   options = options || {};
   var self = this;
 
-  this.log('publishing to exchange ' + self.exchangeName + ' ' + self.queueName);
-
   options.contentType = options.contentType || this.contentType;
   
   self.sendChannel.publish(self.exchangeName, self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options);
