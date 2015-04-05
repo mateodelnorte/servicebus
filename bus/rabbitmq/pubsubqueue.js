@@ -1,7 +1,6 @@
 var events = require('events');
 var extend = require('extend');
 var newId = require('node-uuid').v4;
-var Promise = require('bluebird');
 var util = require('util');
 
 function PubSubQueue (options) {
@@ -30,6 +29,7 @@ function PubSubQueue (options) {
   this.exchangeName = options.exchangeName || 'amq.topic';
   this.exchangeOptions = exchangeOptions;
   this.formatter = options.formatter;
+  this.initialized = false;
   this.listenChannel = options.listenChannel;
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
@@ -39,7 +39,6 @@ function PubSubQueue (options) {
   this.routingKey = options.routingKey;
   this.sendChannel = options.sendChannel;
 
-  // set a promise in order to chain off of initilized?
   this.log('asserting exchange %s', this.exchangeName);
   this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
 }
@@ -50,11 +49,7 @@ PubSubQueue.prototype.publish = function publish (event, options) {
 
   this.log('publishing to exchange ' + self.exchangeName + ' ' + self.queueName);
 
-  extend(options, {
-    contentType: this.contentType,
-    formatter: this.formatter,
-    persistent: Boolean(options.ack || options.acknowledge || options.persistent || self.ack)
-  });
+  options.contentType = options.contentType || this.contentType;
   
   self.sendChannel.publish(self.exchangeName, self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options);
   
@@ -67,27 +62,7 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
     self.listenChannel.cancel(self.subscription.consumerTag, cb);
   }
 
-  var initialized = new Promise(function (resolve, reject) {
-    self.correlator.queueName(options, function (err, uniqueName) {
-      if (err) throw err;
-      self.listenChannel.assertQueue(uniqueName, self.queueOptions)
-        .then(function (qok) {
-          return self.listenChannel.bindQueue(uniqueName, self.exchangeName, self.routingKey || self.queueName);
-        }).then(function () {
-          if (self.ack) {
-            self.log('asserting error queue ' + self.errorQueueName);
-            self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions)
-            .then(function (_qok) {
-              resolve(uniqueName);
-            });
-          } else {
-            resolve(uniqueName);
-          }
-        });
-    });
-  });
-
-  initialized.then(function (uniqueName) {
+  function _subscribe (uniqueName) {
     self.listenChannel.consume(uniqueName, function (message) {
       /*
           Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html 
@@ -103,9 +78,9 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
       options.queueType = 'pubsubqueue';
       self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
         // amqplib intercepts errors and closes connections before bubbling up
-  // to domain error handlers when they occur non-asynchronously within
-  // callback. Therefore, if there is a process domain, we try-catch to
-  // redirect the error, assuming the domain creator's intentions.
+        // to domain error handlers when they occur non-asynchronously within
+        // callback. Therefore, if there is a process domain, we try-catch to
+        // redirect the error, assuming the domain creator's intentions.
         try {
           callback(message.content, message);
         } catch (err) {
@@ -119,6 +94,24 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
     }, { noAck: ! self.ack })
       .then(function (ok) {
         self.subscription = { consumerTag: ok.consumerTag };
+      });
+  }
+
+  self.correlator.queueName(options, function (err, uniqueName) {
+    if (err) throw err;
+    self.listenChannel.assertQueue(uniqueName, self.queueOptions)
+      .then(function (qok) {
+        return self.listenChannel.bindQueue(uniqueName, self.exchangeName, self.routingKey || self.queueName);
+      }).then(function () {
+        if (self.ack) {
+          self.log('asserting error queue ' + self.errorQueueName);
+          self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions)
+          .then(function (_qok) {
+            _subscribe(uniqueName);
+          });
+        } else {
+          _subscribe(uniqueName);
+        }
       });
   });
 

@@ -3,14 +3,13 @@ var events = require('events'),
     fs = require('fs'),
     newId = require('node-uuid'),
     path = require('path'),
-    Promise = require('bluebird'),
     util = require('util');
 var warn = require('debug')('servicebus:warn');
 
-var queues = {};
-
 function Correlator (options) {
-  var self = this;
+  this.initialized = false;
+  this.queues = {};
+
   // note: if you want to cluster servicebus, provide a 'queuesfile' option param when calling .bus(options). you'll likely do a mod of the cluster.worker.id in your cluster.js file when you call fork();
   if (cluster.isWorker && options.queuesFile === undefined) warn('Warning, to use subscriptions in a clustered app, you should specify a queuesFile option when calling .bus(options). You may want to provide something like util.format(\'.queues.worker.%s\', (cluster.worker.id % cluster.workers.length)).');
 
@@ -18,21 +17,22 @@ function Correlator (options) {
     (options && options.queuesFile) ? path.join(process.cwd(), options.queuesFile)
       : (cluster.isWorker) ? path.join(process.cwd(), util.format('.queues.worker.%s', cluster.worker.id))
         :path.join(process.cwd(), '.queues');
-  this.loading = new Promise(function (resolve, reject) {
-    var result;
-    fs.readFile(self.filename, function (err, buf) {
-      if (err) {
-        return resolve({});
-      }
-      try {
-        result = JSON.parse(buf.toString());
-      } catch (err) {
-        result = {};
-      } finally {
-        resolve(result);
-      }
-    });
-  });
+
+  fs.readFile(this.filename, function (err, buf) {
+    if (err) {
+      this.queues = {};
+      this.initialized = true;
+      this.emit('ready');
+      return;
+    }
+    try {
+      this.queues = JSON.parse(buf.toString());
+    } catch (error) {
+      this.queues = {};
+    } 
+    this.initialized = true;
+    this.emit('ready');
+  }.bind(this));
 
   events.EventEmitter.call(this);
 }
@@ -40,29 +40,34 @@ function Correlator (options) {
 util.inherits(Correlator, events.EventEmitter);
 
 Correlator.prototype.queueName = function queueName (options, callback) {
-  var self = this;
+
   var routingKey = options.queueName;
-  this.loading.done(function (result) {
-    queues = result;
-    var queueName;
-    if (queues.hasOwnProperty(routingKey)) {
-      queueName = queues[routingKey];
-    } else if (options.subscriptionName) {
-      queueName = options.subscriptionName;
-    } else {
-      queueName = util.format('%s.%s', routingKey, newId());
-      queues[routingKey] = queueName;
-    }
-    self.persistQueueFile(function (err) {
-      if (err) return callback(err);
-      callback(null, queueName);
-    });
+
+  if ( ! this.initialized) {
+    return this.on('ready', queueName.bind(this, options, callback));
+  }
+
+  var result;
+
+  if (this.queues.hasOwnProperty(routingKey)) {
+    result = this.queues[routingKey];
+  } else if (options.subscriptionName) {
+    result = options.subscriptionName;
+  } else {
+    result = util.format('%s.%s', routingKey, newId());
+    this.queues[routingKey] = result;
+  }
+
+  this.persistQueueFile(function (err) {
+    if (err) return callback(err);
+    callback(null, result);
   });
+
 };
 
 Correlator.prototype.persistQueueFile = function (callback) {
-  var contents = JSON.stringify(queues);
+  var contents = JSON.stringify(this.queues);
   fs.writeFile(this.filename, contents, callback);
-}
+};
 
 module.exports = Correlator;

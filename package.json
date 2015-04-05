@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "amqplib": "^0.2.0",
-    "bluebird": "^1.0.8",
     "debug": "^0.7.4",
     "extend": "^1.2.1",
     "node-uuid": "^1.4.0",
