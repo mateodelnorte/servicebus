@@ -15,6 +15,7 @@ function Queue (options) {
   });
 
   this.ack = (options.ack || options.acknowledge);
+  this.assertQueue = options.assertQueue || true;
   this.bus = options.bus;
   this.errorQueueName = options.queueName + '.error';
   this.formatter = options.formatter;
@@ -34,23 +35,28 @@ function Queue (options) {
 
   this.log('asserting queue %s', this.queueName);
 
-  this.listenChannel.assertQueue(this.queueName, this.queueOptions).then(function (_qok) {
-    if (self.ack) {
-      self.log('asserting error queue %s', self.errorQueueName);
-      self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions)
-      .then(function (_qok) {
+  if ( ! this.assertQueue) {
+    self.initialized = true;
+    self.emit('ready');
+  } else {
+    this.listenChannel.assertQueue(this.queueName, this.queueOptions).then(function (_qok) {
+      if (self.ack) {
+        self.log('asserting error queue %s', self.errorQueueName);
+        self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions)
+        .then(function (_qok) {
+          self.initialized = true;
+          self.emit('ready');
+        });
+      } else {
         self.initialized = true;
         self.emit('ready');
-      });
-    } else {
-      self.initialized = true;
-      self.emit('ready');
-    }
-  }).catch(function (err) {
-    self.log('error connecting to queue %s. error: %s', options.queueName, err.toString());
-    self.emit('error', err);
-  });
-
+      }
+    }).catch(function (err) {
+      self.log('error connecting to queue %s. error: %s', options.queueName, err.toString());
+      self.emit('error', err);
+    });
+  }
+    
 }
 
 util.inherits(Queue, EventEmitter);
