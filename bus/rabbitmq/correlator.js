@@ -41,21 +41,21 @@ util.inherits(Correlator, events.EventEmitter);
 
 Correlator.prototype.queueName = function queueName (options, callback) {
 
-  var routingKey = options.queueName;
-
   if ( ! this.initialized) {
     return this.on('ready', queueName.bind(this, options, callback));
   }
 
   var result;
 
-  if (this.queues.hasOwnProperty(routingKey)) {
-    result = this.queues[routingKey];
-  } else if (options.subscriptionName) {
-    result = options.subscriptionName;
+  if (this.queues.hasOwnProperty(options.queueName)) {
+    result = this.queues[options.queueName];
+  } else if (options.queueName) {
+    result = options.queueName;
+  } else if (options.routingKey) {
+    result = options.routingKey;
   } else {
-    result = util.format('%s.%s', routingKey, newId());
-    this.queues[routingKey] = result;
+    result = util.format('%s.%s', options.queueName, newId());
+    this.queues[options.queueName] = result;
   }
 
   this.persistQueueFile(function (err) {
