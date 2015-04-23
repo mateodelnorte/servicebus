@@ -29,6 +29,9 @@ function retryLocal (channel, message, options, next) {
   var onlyRejectMax = createOnly('reject', maxRetries);
 
   if (options && options.ack) {
+
+    if ( ! message.properties.headers) message.properties.headers = {};
+
     message.properties.headers.rejected = localRejected[message.content.cid];
 
     message.content.handle = {
