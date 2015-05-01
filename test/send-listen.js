@@ -125,14 +125,20 @@ describe('servicebus', function(){
   describe('#unlisten', function() {
 
     it('should cause message to not be received by listen', function (done){
+      var completed = false;
+      function tryDone () {
+        if (completed) return true;
+        completed = true;
+        done();
+      }
       bus.listen('my.event.17', function (event) { 
-        done(new Error('should not receive events after unlisten'));
+        tryDone(new Error('should not receive events after unlisten'));
       });
       setTimeout(function () {
         bus.unlisten('my.event.17').on('success', function () {
           bus.send('my.event.17', { test: 'data'});
           setTimeout(function () {
-            done();
+            tryDone();
           }, 100);
         });
       }, 1500);
@@ -143,19 +149,22 @@ describe('servicebus', function(){
   describe('#destroyListener', function() {
 
     it('should cause message to not be received by listen', function (done){
+      var completed = false;
+      function tryDone () {
+        if (completed) return true;
+        completed = true;
+        done();
+      }
       bus.listen('my.event.18', { ack: true }, function (event) { 
         event.handle.ack();
-        // commence ugliest hack ever to get around rabbitmq queue consumer rules
-        setTimeout(function () {
-          done(new Error('should not receive events after destroy'));
-        }, 500);
+        tryDone(new Error('should not receive events after destroy'));
       });
-      setTimeout(function () {
+      // setTimeout(function () {
         bus.destroyListener('my.event.18').on('success', function () {
           bus.send('my.event.18', { test: 'data'}, { ack: true, expiration: 100 });
-          setTimeout(done, 100);
+          setTimeout(tryDone, 100);
         });
-      }, 1500);
+      // }, 1500);
     });
 
   });

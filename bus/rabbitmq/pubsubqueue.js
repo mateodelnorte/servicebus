@@ -30,6 +30,7 @@ function PubSubQueue (options) {
   this.exchangeOptions = exchangeOptions;
   this.formatter = options.formatter;
   this.initialized = false;
+  this.listening = false;
   this.listenChannel = options.listenChannel;
   this.log = options.log;
   this.maxRetries = options.maxRetries || 3;
@@ -41,7 +42,13 @@ function PubSubQueue (options) {
 
   this.log('asserting exchange %s', this.exchangeName);
   this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
+
+  events.EventEmitter.call(this);
+
+  this.setMaxListeners(Infinity);
 }
+
+util.inherits(PubSubQueue, events.EventEmitter);
 
 PubSubQueue.prototype.publish = function publish (event, options) {
   options = options || {};
@@ -57,7 +64,14 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
   var self = this;
 
   function _unsubscribe (cb) {
-    self.listenChannel.cancel(self.subscription.consumerTag, cb);
+    if (self.listening) {
+      self.listenChannel.cancel(self.subscription.consumerTag, function () {
+        self.emit('unlistened');
+        cb();
+      });
+    } else {
+      self.on('listening', _unsubscribe.bind(this, cb));
+    }
   }
 
   function _subscribe (uniqueName) {
@@ -91,7 +105,9 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
       });
     }, { noAck: ! self.ack })
       .then(function (ok) {
+        self.listening = true;
         self.subscription = { consumerTag: ok.consumerTag };
+        self.emit('listening');
       });
   }
 

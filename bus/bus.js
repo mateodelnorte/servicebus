@@ -6,6 +6,7 @@ function Bus () {
   this.incomingMiddleware = [];
   this.outgoingMiddleware = [];
   EventEmitter.call(this);
+  this.setMaxListeners(Infinity);
 }
 
 util.inherits(Bus, EventEmitter);

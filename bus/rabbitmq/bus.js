@@ -113,7 +113,9 @@ RabbitMQBus.prototype.unlisten = function unlisten (queueName, options) {
   if (this.queues[queueName] === undefined) {
     throw new Error('no queue currently listening at %s', queueName);
   } else {
-    return this.queues[queueName].unlisten(options);
+    var result = this.queues[queueName].unlisten(options);
+    delete this.queues[queueName];
+    return result;
   }
 };
 
