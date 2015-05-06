@@ -49,8 +49,6 @@ Correlator.prototype.queueName = function queueName (options, callback) {
 
   if (this.queues.hasOwnProperty(options.queueName)) {
     result = this.queues[options.queueName];
-  } else if (options.queueName) {
-    result = options.queueName;
   } else if (options.routingKey) {
     result = options.routingKey;
   } else {

@@ -17,23 +17,28 @@ describe('servicebus', function(){
 
     it('should fan out to when multiple listening', function (done){
       var count = 0;
+      var oneDone, twoDone, threeDone, fourDone;
       function tryDone(){
         count++;
         log('received my.event.12 ' + count + ' times');
-        if (count === 4) {
+        if (count === 4 && oneDone && twoDone && threeDone && fourDone) {
           done();
         }
       }
       bus.subscribe('my.event.12', function (event) {
+        oneDone = true;
         tryDone();
       });
       bus.subscribe('my.event.12', function (event) {
+        twoDone = true;
         tryDone();
       });
       bus.subscribe('my.event.12', function (event) {
+        threeDone = true;
         tryDone();
       });
       bus.subscribe('my.event.12', function (event) {
+        fourDone = true;
         tryDone();
       });
       setTimeout(function () {
