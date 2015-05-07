@@ -36,8 +36,10 @@ function RabbitMQBus (options) {
 
   self.log('connecting to rabbitmq on %s', url);
 
-  amqp.connect(url).then(function (conn) {
-    
+  amqp.connect(url).catch(function (err) {
+    self.log('error connecting to rabbitmq: %s', err);
+    self.emit('error', err);
+  }).done(function (conn) {
     process.once('SIGINT', function() { 
       self.log('closing channels and connection');
       self.channels.forEach(function (channel) {
