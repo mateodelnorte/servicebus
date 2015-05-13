@@ -15,7 +15,7 @@ function Queue (options) {
   });
 
   this.ack = (options.ack || options.acknowledge);
-  this.assertQueue = options.assertQueue || true;
+  this.assertQueue = (options.assertQueue === undefined) ? true : options.assertQueue;
   this.bus = options.bus;
   this.errorQueueName = options.queueName + '.error';
   this.formatter = options.formatter;
