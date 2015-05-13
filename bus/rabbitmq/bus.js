@@ -27,6 +27,7 @@ function RabbitMQBus (options) {
   this.formatter = json;
   this.initialized = false;
   this.log = options.log || log;
+  this.prefetch = options.prefetch;
   this.pubsubqueues = {};
   this.queues = {};
   this.queuesFile = options.queuesFile;
@@ -66,6 +67,9 @@ function RabbitMQBus (options) {
     self.connection.createChannel().then(function (channel) {
       channel.on('error', channelError);
       self.sendChannel = channel;
+      if (options.prefetch) {
+        self.sendChannel.prefetch(options.prefetch);
+      }
       self.channels.push(channel);
       done();
     });
@@ -73,6 +77,9 @@ function RabbitMQBus (options) {
     self.connection.createChannel().then(function (channel) {
       channel.on('error', channelError);
       self.listenChannel = channel;
+      if (options.prefetch) {
+        self.listenChannel.prefetch(options.prefetch);
+      }
       self.channels.push(channel);
       done();
     });
