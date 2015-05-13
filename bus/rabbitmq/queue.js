@@ -17,6 +17,7 @@ function Queue (options) {
   this.ack = (options.ack || options.acknowledge);
   this.assertQueue = options.assertQueue || true;
   this.bus = options.bus;
+  this.confirmChannel = options.confirmChannel;
   this.errorQueueName = options.queueName + '.error';
   this.formatter = options.formatter;
   this.initialized = false;
@@ -31,7 +32,7 @@ function Queue (options) {
   this.sendChannel = options.sendChannel;
 
   EventEmitter.call(this);
-  
+
   this.setMaxListeners(Infinity);
 
   var self = this;
@@ -59,7 +60,7 @@ function Queue (options) {
       self.emit('error', err);
     });
   }
-    
+
 }
 
 util.inherits(Queue, EventEmitter);
@@ -67,9 +68,9 @@ util.inherits(Queue, EventEmitter);
 Queue.prototype.listen = function listen (callback, options) {
   options = options || {};
   queueOptions = options.queueOptions || {};
-  
+
   var self = this;
-  
+
   this.log('listening to queue %s', this.queueName);
 
   if ( ! this.initialized) {
@@ -78,13 +79,13 @@ Queue.prototype.listen = function listen (callback, options) {
 
   this.listenChannel.consume(this.queueName, function (message) {
     /*
-        Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html 
-        & http://www.rabbitmq.com/consumer-cancel.html: 
+        Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html
+        & http://www.rabbitmq.com/consumer-cancel.html:
 
         If the consumer is cancelled by RabbitMQ, the message callback will be invoked with null.
       */
     if (message === null) {
-      return; 
+      return;
     }
     message.content = options.formatter.deserialize(message.content);
     options.queueType = 'queue';
@@ -145,19 +146,21 @@ Queue.prototype.unlisten = function unlisten () {
   return em;
 };
 
-Queue.prototype.send = function send (event, options) {
+Queue.prototype.send = function send (event, options, cb) {
   options = options || {};
   var self = this;
 
   if ( ! this.initialized) {
-    return this.on('ready', send.bind(this, event, options));
+    return this.on('ready', send.bind(this, event, options, cb));
   }
 
   options.contentType = options.contentType || this.contentType;
   options.persistent = Boolean(options.ack || options.acknowledge || options.persistent || self.ack);
 
-  this.sendChannel.sendToQueue(this.routingKey || this.queueName, new Buffer(options.formatter.serialize(event)), options);
-  
+  var channel = cb ? this.confirmChannel : this.sendChannel;
+
+  channel.sendToQueue(this.routingKey || this.queueName, new Buffer(options.formatter.serialize(event)), options, cb);
+
 };
 
 module.exports = Queue;
