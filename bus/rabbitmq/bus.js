@@ -20,7 +20,7 @@ function RabbitMQBus (options) {
   options.exchangeName = options.exchangeName || 'amq.topic';
   options.exchangeOptions = options.exchangeOptions || {};
 
-  this.assertQueuesOnFirstSend = options.assertQueuesOnFirstSend || true;
+  this.assertQueuesOnFirstSend = (options.assertQueuesOnFirstSend === undefined) ? true : options.assertQueuesOnFirstSend;
   this.channels = [];
   this.correlator = new Correlator(options);  
   this.delayOnStartup = options.delayOnStartup || 10;
