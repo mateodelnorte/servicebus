@@ -56,7 +56,7 @@ function RabbitMQBus (options) {
     }
 
     function done () {
-      if (self.channels.length === (options.createConfirmChannel ? 3 : 2)) {
+      if (self.channels.length === (options.enableConfirms ? 3 : 2)) {
         self.initialized = true;
         self.log('connected to rabbitmq on %s', url);
         self.emit('ready');
@@ -77,7 +77,7 @@ function RabbitMQBus (options) {
       done();
     });
 
-    if (options.createConfirmChannel) {
+    if (options.enableConfirms) {
       self.connection.createConfirmChannel().then(function (channel) {
         channel.on('error', channelError);
         self.confirmChannel = channel;
@@ -170,11 +170,14 @@ RabbitMQBus.prototype.send = function send (queueName, message, options, cb) {
   }
 
   this.setOptions(queueName, options);
-  if (this.queues[options.queueName] === undefined) {
-    this.queues[options.queueName] = new Queue(options);
+
+  var key = cb ? options.queueName + '.confirm' : options.queueName;
+
+  if (this.queues[key] === undefined) {
+    this.queues[key] = new Queue(options);
   }
   this.handleOutgoing(options.queueName, message, function (queueName, message) {
-    this.queues[queueName].send(message, options, cb);
+    this.queues[key].send(message, options, cb);
   }.bind(this));
 
 };
@@ -220,12 +223,14 @@ RabbitMQBus.prototype.publish = function publish (queueName, message, options, c
 
   this.setOptions(queueName, options);
 
-  if (this.pubsubqueues[options.queueName] === undefined) {
-    this.pubsubqueues[options.queueName] = new PubSubQueue(options);
+  var key = cb ? options.queueName + '.confirm' : options.queueName;
+
+  if (this.pubsubqueues[key] === undefined) {
+    this.pubsubqueues[key] = new PubSubQueue(options);
   }
 
   this.handleOutgoing(options.queueName, message, function (queueName, message) {
-    this.pubsubqueues[queueName].publish(message, options, cb);
+    this.pubsubqueues[key].publish(message, options, cb);
   }.bind(this));
 
 };
