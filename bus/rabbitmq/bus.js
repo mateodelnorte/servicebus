@@ -81,6 +81,9 @@ function RabbitMQBus (options) {
       self.connection.createConfirmChannel().then(function (channel) {
         channel.on('error', channelError);
         self.confirmChannel = channel;
+        if (options.prefetch) {
+          self.confirmChannel.prefetch(options.prefetch);
+        }
         self.channels.push(channel);
         done();
       });
