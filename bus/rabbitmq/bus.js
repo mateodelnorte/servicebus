@@ -174,7 +174,7 @@ RabbitMQBus.prototype.send = function send (queueName, message, options, cb) {
 
   this.setOptions(queueName, options);
 
-  var key = cb ? options.queueName + '.confirm' : options.queueName;
+  var key = options.enableConfirms && cb ? options.queueName + '.confirm' : options.queueName;
 
   if (this.queues[key] === undefined) {
     this.queues[key] = new Queue(options);
