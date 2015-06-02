@@ -2,6 +2,7 @@ var noop = function () {};
 var log = require('debug')('servicebus:test')
 var bus = require('./bus-shim').bus;
 var confirmBus = require('./bus-confirm-shim').bus;
+var should = require('should');
 
 describe('servicebus', function(){
 
@@ -96,10 +97,22 @@ describe('servicebus', function(){
     });
 
     it('should use callback in confirm mode', function (done) {
+      confirmBus.publish('my.event.15', { my: 'event' }, function (err, ok) {
+        done(err);
+      });
+    });
+
+    it('should use callback in confirm mode with options supplied', function (done) {
       confirmBus.publish('my.event.15', { my: 'event' }, {}, function (err, ok) {
-        if (!err) {
-          done();
-        }
+        done(err);
+      });
+    });
+
+    it('should throw error when using callback and not confirmsEnabled', function (done) {
+      bus.publish('my.event.15', { my: 'event' }, function (err, ok) {
+        err.should.not.eql(null);
+        err.message.should.eql('callbacks only supported when created with bus({ enableConfirms:true })');
+        done();
       });
     });
 

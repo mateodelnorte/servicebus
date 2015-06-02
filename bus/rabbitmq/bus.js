@@ -173,7 +173,14 @@ RabbitMQBus.prototype.setOptions = function (queueName, options) {
 };
 
 RabbitMQBus.prototype.send = function send (queueName, message, options, cb) {
+  if (typeof options === 'function') {
+    cb = options;
+    options = {};
+  }
+  
   options = options || {};
+
+  if (cb && ! this.confirmChannel) return cb(new Error('callbacks only supported when created with bus({ enableConfirms:true })'))
 
   if ( ! this.initialized) {
     return this.on('ready', send.bind(this, queueName, message, options, cb));
@@ -181,7 +188,7 @@ RabbitMQBus.prototype.send = function send (queueName, message, options, cb) {
 
   this.setOptions(queueName, options);
 
-  var key = options.enableConfirms && cb ? options.queueName + '.confirm' : options.queueName;
+  var key = this.confirmChannel && cb ? options.queueName + '.confirm' : options.queueName;
 
   if (this.queues[key] === undefined) {
     this.queues[key] = new Queue(options);
@@ -225,7 +232,14 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
 };
 
 RabbitMQBus.prototype.publish = function publish (queueName, message, options, cb) {
+  if (typeof options === 'function') {
+    cb = options;
+    options = {};
+  }
+
   options = options || {};
+
+  if (cb && ! this.confirmChannel) return cb(new Error('callbacks only supported when created with bus({ enableConfirms:true })'))
 
   if ( ! this.initialized) {
     return this.on('ready', publish.bind(this, queueName, message, options, cb));
@@ -233,7 +247,7 @@ RabbitMQBus.prototype.publish = function publish (queueName, message, options, c
 
   this.setOptions(queueName, options);
 
-  var key = cb ? options.queueName + '.confirm' : options.queueName;
+  var key = this.confirmChannel && cb  ? options.queueName + '.confirm' : options.queueName;
 
   if (this.pubsubqueues[key] === undefined) {
     this.pubsubqueues[key] = new PubSubQueue(options);

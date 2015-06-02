@@ -1,6 +1,7 @@
 var noop = function () {};
 var log = require('debug')('servicebus:test');
 var bus = require('./bus-shim').bus;
+var confirmBus = require('./bus-confirm-shim').bus;
 var util = require('util');
 
 describe('servicebus', function(){
@@ -86,39 +87,25 @@ describe('servicebus', function(){
       }, 10);
     });
 
-  //   it('allows routing based on routingKey, on same named queue', function (done){
-  //     var count = 0;
-  //     var interval = setInterval(function checkDone () {
-  //       if (count === 4) {
-  //         clearInterval(interval);
-  //         bus.destroyListener('my.event.routingKey').on('success', function () {
-  //           done();
-  //         });
-  //       } 
-  //     }, 10);
-  //     bus.listen('my.event.routingKey.1', { ack: true }, function (event) {
-  //       count++;
-  //       event.handle.ack();
-  //     });
-  //     bus.listen('my.event.routingKey.2', { ack: true }, function (event) {
-  //       count++;
-  //       event.handle.ack();
-  //     });
-  //     bus.listen('my.event.routingKey.3', { ack: true }, function (event) {
-  //       count++;
-  //       event.handle.ack();
-  //     });
-  //     bus.listen('my.event.routingKey.4', { ack: true }, function (event) {
-  //       count++;
-  //       event.handle.ack();
-  //     });
-  //     setTimeout(function () {
-  //       bus.send({ queueName: 'my.event.routingKey', routingKey: 'my.event.routingKey.1' }, { my: 'event1' });
-  //       bus.send({ queueName: 'my.event.routingKey', routingKey: 'my.event.routingKey.2' }, { my: 'event2' });
-  //       bus.send({ queueName: 'my.event.routingKey', routingKey: 'my.event.routingKey.3' }, { my: 'event3' });
-  //       bus.send({ queueName: 'my.event.routingKey', routingKey: 'my.event.routingKey.4' }, { my: 'event4' });
-  //     }, 10);
-  //   });
+    it('should use callback in confirm mode', function (done) {
+      confirmBus.send('my.event.19', { my: 'event' }, {}, function (err, ok) {
+        done(err);
+      });
+    });
+
+    it('should use callback in confirm mode with options supplied', function (done) {
+      confirmBus.send('my.event.19', { my: 'event' }, function (err, ok) {
+        done(err);
+      });
+    });
+
+    it('should throw error when using callback and not confirmsEnabled', function (done) {
+      bus.send('my.event.15', { my: 'event' }, function (err, ok) {
+        err.should.not.eql(null);
+        err.message.should.eql('callbacks only supported when created with bus({ enableConfirms:true })');
+        done();
+      });
+    });
     
   });
 
