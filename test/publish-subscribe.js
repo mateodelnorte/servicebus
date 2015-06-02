@@ -1,6 +1,7 @@
 var noop = function () {};
 var log = require('debug')('servicebus:test')
 var bus = require('./bus-shim').bus;
+var confirmBus = require('./bus-confirm-shim').bus;
 
 describe('servicebus', function(){
 
@@ -92,6 +93,14 @@ describe('servicebus', function(){
         bus.publish('my.event.14', { my: 'event' });
         bus.publish('my.event.14', { my: 'event' });
       }, 100);
+    });
+
+    it('should use callback in confirm mode', function (done) {
+      confirmBus.publish('my.event.15', { my: 'event' }, {}, function (err, ok) {
+        if (!err) {
+          done();
+        }
+      });
     });
 
     // it('should allow for a mixture of ack:true and ack:false subscriptions', function () {

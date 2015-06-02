@@ -24,6 +24,7 @@ function PubSubQueue (options) {
 
   this.ack = (options.ack || options.acknowledge);
   this.bus = options.bus;
+  this.confirmChannel = options.confirmChannel;
   this.correlator = options.correlator;
   this.errorQueueName = options.queueName + '.error';
   this.exchangeName = options.exchangeName || 'amq.topic';
@@ -43,6 +44,10 @@ function PubSubQueue (options) {
   this.log('asserting exchange %s', this.exchangeName);
   this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
 
+  if (this.confirmChannel) {
+    this.confirmChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
+  }
+
   events.EventEmitter.call(this);
 
   this.setMaxListeners(Infinity);
@@ -50,14 +55,16 @@ function PubSubQueue (options) {
 
 util.inherits(PubSubQueue, events.EventEmitter);
 
-PubSubQueue.prototype.publish = function publish (event, options) {
+PubSubQueue.prototype.publish = function publish (event, options, cb) {
   options = options || {};
   var self = this;
 
   options.contentType = options.contentType || this.contentType;
-  
-  self.sendChannel.publish(self.exchangeName, self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options);
-  
+
+  var channel = cb ? self.confirmChannel : self.sendChannel;
+
+  channel.publish(self.exchangeName, self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options, cb);
+
 };
 
 PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
@@ -77,13 +84,13 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
   function _subscribe (uniqueName) {
     self.listenChannel.consume(uniqueName, function (message) {
       /*
-          Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html 
-          & http://www.rabbitmq.com/consumer-cancel.html: 
+          Note from http://www.squaremobius.net/amqp.node/doc/channel_api.html
+          & http://www.rabbitmq.com/consumer-cancel.html:
 
           If the consumer is cancelled by RabbitMQ, the message callback will be invoked with null.
         */
       if (message === null) {
-        return; 
+        return;
       }
       // todo: map contentType to default formatters
       message.content = options.formatter.deserialize(message.content);

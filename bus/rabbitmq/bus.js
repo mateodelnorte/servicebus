@@ -22,7 +22,7 @@ function RabbitMQBus (options) {
 
   this.assertQueuesOnFirstSend = (options.assertQueuesOnFirstSend === undefined) ? true : options.assertQueuesOnFirstSend;
   this.channels = [];
-  this.correlator = new Correlator(options);  
+  this.correlator = new Correlator(options);
   this.delayOnStartup = options.delayOnStartup || 10;
   this.formatter = json;
   this.initialized = false;
@@ -41,12 +41,12 @@ function RabbitMQBus (options) {
     self.log('error connecting to rabbitmq: %s', err);
     self.emit('error', err);
   }).done(function (conn) {
-    process.once('SIGINT', function() { 
+    process.once('SIGINT', function() {
       self.log('closing channels and connection');
       self.channels.forEach(function (channel) {
         channel.close();
       });
-      conn.close(); 
+      conn.close();
     });
 
     self.connection = conn;
@@ -57,7 +57,7 @@ function RabbitMQBus (options) {
     }
 
     function done () {
-      if (self.channels.length === 2) {
+      if (self.channels.length === (options.enableConfirms ? 3 : 2)) {
         self.initialized = true;
         self.log('connected to rabbitmq on %s', url);
         self.emit('ready');
@@ -84,6 +84,18 @@ function RabbitMQBus (options) {
       done();
     });
 
+    if (options.enableConfirms) {
+      self.connection.createConfirmChannel().then(function (channel) {
+        channel.on('error', channelError);
+        self.confirmChannel = channel;
+        if (options.prefetch) {
+          self.confirmChannel.prefetch(options.prefetch);
+        }
+        self.channels.push(channel);
+        done();
+      });
+    }
+
   }, function (err) {
     self.log('error connecting to rabbitmq: %s', err);
     self.emit('error', err);
@@ -95,9 +107,9 @@ function RabbitMQBus (options) {
 util.inherits(RabbitMQBus, Bus);
 
 RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
-  
+
   this.log('listen on queue %s', queueName);
-  
+
   if (typeof options === "function") {
     callback = options;
     options = {};
@@ -118,7 +130,7 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
 
 };
 
-RabbitMQBus.prototype.unlisten = function unlisten (queueName, options) {  
+RabbitMQBus.prototype.unlisten = function unlisten (queueName, options) {
   if (this.queues[queueName] === undefined) {
     throw new Error('no queue currently listening at %s', queueName);
   } else {
@@ -128,7 +140,7 @@ RabbitMQBus.prototype.unlisten = function unlisten (queueName, options) {
   }
 };
 
-RabbitMQBus.prototype.destroyListener = function removeListener (queueName) {  
+RabbitMQBus.prototype.destroyListener = function removeListener (queueName) {
   if (this.queues[queueName] === undefined) {
     throw new Error('no queue currently listening at %s', queueName);
   } else {
@@ -147,31 +159,35 @@ RabbitMQBus.prototype.setOptions = function (queueName, options) {
     options.queueName = queueName;
   }
 
-  extend(options, { 
+  extend(options, {
     assertQueue: this.assertQueuesOnFirstSend,
-    bus: this, 
+    bus: this,
+    confirmChannel: this.confirmChannel,
     correlator: this.correlator,
     formatter: this.formatter,
-    listenChannel: this.listenChannel, 
-    log: this.log, 
+    listenChannel: this.listenChannel,
+    log: this.log,
     queuesFile: this.queuesFile,
     sendChannel: this.sendChannel
   });
 };
 
-RabbitMQBus.prototype.send = function send (queueName, message, options) {
+RabbitMQBus.prototype.send = function send (queueName, message, options, cb) {
   options = options || {};
 
   if ( ! this.initialized) {
-    return this.on('ready', send.bind(this, queueName, message, options));
+    return this.on('ready', send.bind(this, queueName, message, options, cb));
   }
 
   this.setOptions(queueName, options);
-  if (this.queues[options.queueName] === undefined) {
-    this.queues[options.queueName] = new Queue(options);
+
+  var key = options.enableConfirms && cb ? options.queueName + '.confirm' : options.queueName;
+
+  if (this.queues[key] === undefined) {
+    this.queues[key] = new Queue(options);
   }
   this.handleOutgoing(options.queueName, message, function (queueName, message) {
-    this.queues[queueName].send(message, options);
+    this.queues[key].send(message, options, cb);
   }.bind(this));
 
 };
@@ -208,21 +224,23 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
 
 };
 
-RabbitMQBus.prototype.publish = function publish (queueName, message, options) {
+RabbitMQBus.prototype.publish = function publish (queueName, message, options, cb) {
   options = options || {};
 
   if ( ! this.initialized) {
-    return this.on('ready', publish.bind(this, queueName, message, options));
+    return this.on('ready', publish.bind(this, queueName, message, options, cb));
   }
 
   this.setOptions(queueName, options);
 
-  if (this.pubsubqueues[options.queueName] === undefined) {
-    this.pubsubqueues[options.queueName] = new PubSubQueue(options);
+  var key = cb ? options.queueName + '.confirm' : options.queueName;
+
+  if (this.pubsubqueues[key] === undefined) {
+    this.pubsubqueues[key] = new PubSubQueue(options);
   }
 
   this.handleOutgoing(options.queueName, message, function (queueName, message) {
-    this.pubsubqueues[queueName].publish(message, options);
+    this.pubsubqueues[key].publish(message, options, cb);
   }.bind(this));
 
 };
