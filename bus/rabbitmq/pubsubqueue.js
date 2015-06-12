@@ -9,7 +9,7 @@ function PubSubQueue (options) {
   var queueOptions = options.queueOptions || {};
 
   extend(queueOptions, {
-    autoDelete: ! (options.ack || options.acknowledge),
+    autoDelete: options.autoDelete || ! (options.ack || options.acknowledge),
     contentType: options.contentType || 'application/json',
     durable: Boolean(options.ack || options.acknowledge),
     exclusive: options.exclusive || false,
@@ -126,7 +126,10 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
       }).then(function () {
         if (self.ack) {
           self.log('asserting error queue ' + self.errorQueueName);
-          self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions)
+          var errorQueueOptions = extend(self.queueOptions, {
+            autoDelete: options.autoDeleteErrorQueue || false
+          });
+          self.listenChannel.assertQueue(self.errorQueueName, errorQueueOptions)
           .then(function (_qok) {
             _subscribe(uniqueName);
           });

@@ -3,6 +3,7 @@ var log = require('debug')('servicebus:test')
 var bus = require('./bus-shim').bus;
 var confirmBus = require('./bus-confirm-shim').bus;
 var should = require('should');
+var sinon = require('sinon');
 
 describe('servicebus', function(){
 
@@ -114,6 +115,25 @@ describe('servicebus', function(){
         err.message.should.eql('callbacks only supported when created with bus({ enableConfirms:true })');
         done();
       });
+    });
+
+    it('should allow ack:true and autodelete:true for publishes', function (done) {
+      var expectation = sinon.mock();
+      var subscription = bus.subscribe('my.event.30', { ack: true, autoDelete: true }, function () {
+        expectation();
+      });
+      setTimeout(function () {
+        bus.publish('my.event.30', {});
+        setTimeout(function () {
+          subscription.unsubscribe();
+          setTimeout(function () {
+            expectation.callCount.should.eql(1);
+            bus.destroyListener('my.event.30', { force: true }).on('success', function () {
+              done();
+            });
+          }, 100);
+        }, 100);
+      }, 100);
     });
 
     // it('should allow for a mixture of ack:true and ack:false subscriptions', function () {

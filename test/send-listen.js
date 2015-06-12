@@ -2,6 +2,7 @@ var noop = function () {};
 var log = require('debug')('servicebus:test');
 var bus = require('./bus-shim').bus;
 var confirmBus = require('./bus-confirm-shim').bus;
+var sinon = require('sinon');
 var util = require('util');
 
 describe('servicebus', function(){
@@ -105,6 +106,24 @@ describe('servicebus', function(){
         err.message.should.eql('callbacks only supported when created with bus({ enableConfirms:true })');
         done();
       });
+    });
+
+    it('should allow ack:true and autodelete:true for sends', function (done) {
+      var expectation = sinon.mock();
+      bus.listen('my.event.25', { ack: true, autoDelete: true }, function () {
+        expectation();
+      });
+      setTimeout(function () {
+        bus.send('my.event.25', {});
+        bus.unlisten('my.event.25').on('success', function () {
+          setTimeout(function () {
+            expectation.callCount.should.eql(1);
+            bus.destroyListener('my.event.25', { force: true }).on('success', function () {
+              done();
+            });
+          }, 100);
+        });
+      }, 100);
     });
     
   });
