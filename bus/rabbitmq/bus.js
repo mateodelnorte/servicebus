@@ -140,11 +140,20 @@ RabbitMQBus.prototype.unlisten = function unlisten (queueName, options) {
   }
 };
 
-RabbitMQBus.prototype.destroyListener = function removeListener (queueName) {
-  if (this.queues[queueName] === undefined) {
+RabbitMQBus.prototype.destroyListener = function removeListener (queueName, options) {
+  options = options || {};
+  if ( ! options.force && this.queues[queueName] === undefined) {
     throw new Error('no queue currently listening at %s', queueName);
   } else {
     var q = this.queues[queueName];
+    if (! q && options.force) {
+      var em = new events.EventEmitter();
+      this.listenChannel.deleteQueue(queueName, { ifEmpty: false })
+        .then(function (ok) {
+          em.emit('success');
+        });
+      return em;
+    }
     delete this.queues[queueName];
     return q.destroy();
   }

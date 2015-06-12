@@ -7,7 +7,7 @@ function Queue (options) {
   var queueOptions = options.queueOptions || {};
 
   extend(queueOptions, {
-    autoDelete: ! (options.ack || options.acknowledge),
+    autoDelete: options.autoDelete || ! (options.ack || options.acknowledge),
     contentType: options.contentType || 'application/json',
     durable: Boolean(options.ack || options.acknowledge),
     exclusive: options.exclusive || false,
@@ -46,6 +46,9 @@ function Queue (options) {
     this.listenChannel.assertQueue(this.queueName, this.queueOptions).then(function (_qok) {
       if (self.ack) {
         self.log('asserting error queue %s', self.errorQueueName);
+        var errorQueueOptions = extend(self.queueOptions, {
+          autoDelete: options.autoDeleteErrorQueue || false
+        });
         self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions)
         .then(function (_qok) {
           self.initialized = true;
