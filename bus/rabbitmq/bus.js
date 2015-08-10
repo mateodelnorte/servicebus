@@ -41,9 +41,6 @@ function RabbitMQBus (options) {
     self.log('error connecting to rabbitmq: %s', err);
     self.emit('error', err);
   }).done(function (conn) {
-    process.once('SIGINT', function() {
-      self.close();
-    });
 
     self.connection = conn;
 
