@@ -41,13 +41,6 @@ function RabbitMQBus (options) {
     self.log('error connecting to rabbitmq: %s', err);
     self.emit('error', err);
   }).done(function (conn) {
-    process.once('SIGINT', function() {
-      self.log('closing channels and connection');
-      self.channels.forEach(function (channel) {
-        channel.close();
-      });
-      conn.close();
-    });
 
     self.connection = conn;
 
@@ -186,7 +179,7 @@ RabbitMQBus.prototype.send = function send (queueName, message, options, cb) {
     cb = options;
     options = {};
   }
-  
+
   options = options || {};
 
   if (cb && ! this.confirmChannel) return cb(new Error('callbacks only supported when created with bus({ enableConfirms:true })'))
@@ -265,6 +258,16 @@ RabbitMQBus.prototype.publish = function publish (queueName, message, options, c
   this.handleOutgoing(options.queueName, message, function (queueName, message) {
     this.pubsubqueues[key].publish(message, options, cb);
   }.bind(this));
+
+};
+
+RabbitMQBus.prototype.close = function close () {
+
+  this.log('closing channels and connection');
+  this.channels.forEach(function (channel) {
+    channel.close();
+  });
+  this.connection.close();
 
 };
 
