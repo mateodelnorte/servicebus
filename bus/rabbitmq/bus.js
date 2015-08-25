@@ -16,7 +16,7 @@ function RabbitMQBus (options) {
 
   options = options || {};
   options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
-  options.vhost = options.vhost || process.env.RABBITMQ_VHOST || '/';
+  options.vhost = options.vhost || process.env.RABBITMQ_VHOST;
   options.exchangeName = options.exchangeName || 'amq.topic';
   options.exchangeOptions = options.exchangeOptions || {};
 
@@ -32,8 +32,8 @@ function RabbitMQBus (options) {
   this.queues = {};
   this.queuesFile = options.queuesFile;
 
-  var vhost = util.format('/%s', querystring.escape(options.vhost));
-  var url = util.format('%s%s', options.url, vhost);
+  var vhost = options.vhost && util.format('/%s', querystring.escape(options.vhost));
+  var url = vhost ? util.format('%s%s', options.url, vhost) : options.url;
 
   self.log('connecting to rabbitmq on %s', url);
 
