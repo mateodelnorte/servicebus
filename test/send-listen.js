@@ -62,7 +62,7 @@ describe('servicebus', function(){
       setTimeout(function () {
         for(var i = 0; i <= endCount; ++i) {
           bus.send('my.event.3', { my: 'event' });
-        };
+        }
       }, 100);
     });
 
@@ -74,7 +74,7 @@ describe('servicebus', function(){
           bus.destroyListener('my.event.4').on('success', function () {
             done();
           });
-        } 
+        }
       }, 10);
       bus.listen('my.event.4', { ack: true }, function (event) {
         count++;
@@ -114,18 +114,20 @@ describe('servicebus', function(){
         expectation();
       });
       setTimeout(function () {
-        bus.send('my.event.25', {});
-        bus.unlisten('my.event.25').on('success', function () {
-          setTimeout(function () {
-            expectation.callCount.should.eql(1);
-            bus.destroyListener('my.event.25', { force: true }).on('success', function () {
-              done();
-            });
-          }, 100);
-        });
+        bus.send('my.event.25', {}, {ack: true});
+        setTimeout(function () {
+          bus.unlisten('my.event.25').on('success', function () {
+            setTimeout(function () {
+              expectation.callCount.should.eql(1);
+              bus.destroyListener('my.event.25', { force: true }).on('success', function () {
+                done();
+              });
+            }, 100);
+          });
+        }, 100);
       }, 100);
     });
-    
+
   });
 
   describe('#unlisten', function() {
@@ -137,7 +139,7 @@ describe('servicebus', function(){
         completed = true;
         done();
       }
-      bus.listen('my.event.17', function (event) { 
+      bus.listen('my.event.17', function (event) {
         tryDone(new Error('should not receive events after unlisten'));
       });
       setTimeout(function () {
@@ -161,7 +163,7 @@ describe('servicebus', function(){
         completed = true;
         done();
       }
-      bus.listen('my.event.18', { ack: true }, function (event) { 
+      bus.listen('my.event.18', { ack: true }, function (event) {
         event.handle.ack();
         tryDone(new Error('should not receive events after destroy'));
       });
@@ -174,5 +176,4 @@ describe('servicebus', function(){
     });
 
   });
-
-})
+});

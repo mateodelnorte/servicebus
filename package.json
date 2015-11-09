@@ -14,20 +14,20 @@
     "url": "git://github.com/mateodelnorte/servicebus.git"
   },
   "engines": {
-    "node": "0.6 || 0.8 || 0.9 || 0.10"
+    "node": "0.6 || 0.8 || 0.9 || 0.10 || 0.12"
   },
   "dependencies": {
-    "amqplib": "^0.2.0",
-    "debug": "^0.7.4",
-    "extend": "^1.2.1",
-    "node-uuid": "^1.4.0",
-    "readable-id": "0.0.2"
+    "amqplib": "^0.4.0",
+    "debug": "^2.2.0",
+    "extend": "^3.0.0",
+    "node-uuid": "^1.4.3",
+    "readable-id": "0.0.3"
   },
   "devDependencies": {
-    "longjohn": "~0.2.0",
-    "mocha": ">=1.2.1",
-    "should": "0.6.3",
-    "sinon": "~1.7.3"
+    "longjohn": "~0.2.9",
+    "mocha": ">=2.3.3",
+    "should": "7.1.0",
+    "sinon": "~1.17.1"
   },
   "optionalDependencies": {}
 }
