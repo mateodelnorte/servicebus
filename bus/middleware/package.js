@@ -9,8 +9,14 @@ function packageMessage (queueName, message, next) {
 
 }
 
+function handleIncoming (channel, message, options, next) {
+  message.content.type = message.properties.type || message.content.type;
+  next(null, channel, message, options);
+}
+
 module.exports = function () {
   return {
-    handleOutgoing: packageMessage
+    handleOutgoing: packageMessage,
+    handleIncoming: handleIncoming
   };
-} 
+};
