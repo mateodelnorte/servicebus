@@ -182,11 +182,11 @@ RabbitMQBus.prototype.send = function send (queueName, message, options, cb) {
 
   options = options || {};
 
-  if (cb && ! this.confirmChannel) return cb(new Error('callbacks only supported when created with bus({ enableConfirms:true })'))
-
   if ( ! this.initialized) {
     return this.on('ready', send.bind(this, queueName, message, options, cb));
   }
+
+  if (cb && ! this.confirmChannel) return cb(new Error('callbacks only supported when created with bus({ enableConfirms:true })'))
 
   this.setOptions(queueName, options);
 
@@ -241,11 +241,11 @@ RabbitMQBus.prototype.publish = function publish (queueName, message, options, c
 
   options = options || {};
 
-  if (cb && ! this.confirmChannel) return cb(new Error('callbacks only supported when created with bus({ enableConfirms:true })'))
-
   if ( ! this.initialized) {
     return this.on('ready', publish.bind(this, queueName, message, options, cb));
   }
+
+  if (cb && ! this.confirmChannel) return cb(new Error('callbacks only supported when created with bus({ enableConfirms:true })'))
 
   this.setOptions(queueName, options);
 
