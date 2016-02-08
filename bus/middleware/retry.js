@@ -68,7 +68,11 @@ function retryLocal (channel, message, options, next) {
   next(null, channel, message, options);
 }
 
-function retryDistributed (channel, message, options, next) {    
+function retryDistributed (channel, message, options, next) {
+
+  if (message.properties.headers === undefined) {
+    message.properties.headers = {};
+  }
 
   if (message.properties.headers.rejected === undefined) {
     message.properties.headers.rejected = 0;
