@@ -12,8 +12,13 @@ module.exports = function (options) {
       next(null, channel, message, options);
     },
 
-    handleOutgoing: function json (queueName, message, next) { 
-      next(null, queueName, message);
+    handleOutgoing: function json (queueName, message, options, next) {
+      if (typeof options === 'function') {
+        next = options;
+        options = null;
+      }
+
+      next(null, queueName, message, options);
     }
 
   };

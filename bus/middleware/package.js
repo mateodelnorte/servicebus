@@ -1,11 +1,16 @@
-function packageMessage (queueName, message, next) {
+function packageMessage (queueName, message, options, next) {
+  if (typeof options === 'function') {
+    next = options;
+    options = null;
+  }
+
   var newMessage = {
       data: message
     , datetime: message.datetime || new Date().toUTCString()
     , type: message.type || queueName
   };
 
-  next(null, queueName, newMessage);
+  next(null, queueName, newMessage, options);
 
 }
 
