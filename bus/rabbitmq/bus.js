@@ -195,7 +195,8 @@ RabbitMQBus.prototype.send = function send (queueName, message, options, cb) {
   if (this.queues[key] === undefined) {
     this.queues[key] = new Queue(options);
   }
-  this.handleOutgoing(options.queueName, message, function (queueName, message) {
+
+  this.handleOutgoing(options.queueName, message, options, function (queueName, message, options) {
     this.queues[key].send(message, options, cb);
   }.bind(this));
 
@@ -255,7 +256,7 @@ RabbitMQBus.prototype.publish = function publish (queueName, message, options, c
     this.pubsubqueues[key] = new PubSubQueue(options);
   }
 
-  this.handleOutgoing(options.queueName, message, function (queueName, message) {
+  this.handleOutgoing(options.queueName, message, options, function (queueName, message, options) {
     this.pubsubqueues[key].publish(message, options, cb);
   }.bind(this));
 

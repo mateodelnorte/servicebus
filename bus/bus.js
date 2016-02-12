@@ -48,14 +48,18 @@ Bus.prototype.handleIncoming = function (/* channel, message, options, callback 
   return next.apply(this, args);
 };
 
-Bus.prototype.handleOutgoing = function (queueName, message, callback) {
-  
+Bus.prototype.handleOutgoing = function (queueName, message, options, callback) {
+  if (typeof options === 'function') {
+    callback = options;
+    options = null;
+  }
+
   var index = 0;
   var self = this;
 
 
   function next (err) {
-    if (err) return callback(err); 
+    if (err) return callback(err);
 
     var layer;
     var args = Array.prototype.slice.call(arguments, 1);
@@ -69,10 +73,10 @@ Bus.prototype.handleOutgoing = function (queueName, message, callback) {
     } else  {
       args.push(next);
       return layer.apply(self, args);
-    } 
+    }
   }
 
-  return next(null, queueName, message);
+  return next(null, queueName, message, options);
 };
 
 Bus.prototype.correlate = require('./middleware/correlate');

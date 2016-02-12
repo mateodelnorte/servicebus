@@ -20,13 +20,18 @@ module.exports = function (options) {
     next.apply(this, args);
   }
 
-  function logOutgoing (queueName, message, next) {    
+  function logOutgoing (queueName, message, options, next) {
+    if (typeof options === 'function') {
+      next = options;
+      options = null;
+    }
+
     fnOutgoing(message, queueName);
-    next(null, queueName, message);
+    next(null, queueName, message, options);
   }
 
   return {
     handleIncoming: logIncoming,
     handleOutgoing: logOutgoing
   };
-} 
+}
