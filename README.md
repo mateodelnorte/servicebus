@@ -29,7 +29,7 @@
 
 ## Message Acknowledgement
 
-  (Note: message acking requires use of the retry() middleware, referenced below)
+  (Note: message acking requires use of the https://github.com/mateodelnorte/servicebus-retry middleware)
 
   Servicebus integrates with RabbitMQ's message acknowledement functionality, which causes messages to queue instead of sending until the listening processes marks any previously received message as acknowledged or rejected. Messages can be acknowledged or rejected with the following syntax. To use ack and reject, it must be specified when defining the listening function: 
 
@@ -148,5 +148,7 @@ becomes
 ```
 
 ### Retry
+
+https://github.com/mateodelnorte/servicebus-retry
 
 Retry provides ability to specify a max number of times an erroring message will be retried before being placed on an error queue. The retry middleware requires the correlate middleware. 
