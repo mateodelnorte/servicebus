@@ -24,6 +24,7 @@ function RabbitMQBus (options) {
   this.channels = [];
   this.correlator = new Correlator(options);
   this.delayOnStartup = options.delayOnStartup || 10;
+  this.exchangeName = options.exchangeName;
   this.formatter = json;
   this.initialized = false;
   this.log = options.log || log;
