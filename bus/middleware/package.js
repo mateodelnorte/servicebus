@@ -10,6 +10,11 @@ function packageMessage (queueName, message, options, next) {
     , type: message.type || queueName
   };
 
+  if (message.hasOwnProperty('cid')) {
+    newMessage.cid = message.cid;
+    delete newMessage.data.cid;
+  }
+
   next(null, queueName, newMessage, options);
 
 }
