@@ -126,7 +126,7 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
 
 RabbitMQBus.prototype.unlisten = function unlisten (queueName, options) {
   if (this.queues[queueName] === undefined) {
-    throw new Error('no queue currently listening at %s', queueName);
+    throw new Error(util.format('no queue currently listening at %s', queueName));
   } else {
     var result = this.queues[queueName].unlisten(options);
     delete this.queues[queueName];
@@ -137,7 +137,7 @@ RabbitMQBus.prototype.unlisten = function unlisten (queueName, options) {
 RabbitMQBus.prototype.destroyListener = function removeListener (queueName, options) {
   options = options || {};
   if ( ! options.force && this.queues[queueName] === undefined) {
-    throw new Error('no queue currently listening at %s', queueName);
+    throw new Error(util.format('no queue currently listening at %s', queueName));
   } else {
     var q = this.queues[queueName];
     if (! q && options.force) {
