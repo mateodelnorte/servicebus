@@ -69,12 +69,14 @@ PubSubQueue.prototype.publish = function publish (event, options, cb) {
 
 PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
   var self = this;
+  var listening = false;
+  var subscription = null;
 
   function _unsubscribe (cb) {
-    if (self.listening) {
-      // cancel misses callback version so we have to use the promise
+    if (listening) {
+      // should we prevent multiple cancel calls?
       self.listenChannel
-        .cancel(self.subscription.consumerTag)
+        .cancel(subscription.consumerTag)
         .then(function () {
           self.emit('unlistened');
           if (cb) {
@@ -117,8 +119,8 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
       });
     }, { noAck: ! self.ack })
       .then(function (ok) {
-        self.listening = true;
-        self.subscription = { consumerTag: ok.consumerTag };
+        listening = true;
+        subscription = { consumerTag: ok.consumerTag };
         self.emit('listening');
       });
   }
