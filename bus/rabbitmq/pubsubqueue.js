@@ -77,7 +77,9 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
         .cancel(self.subscription.consumerTag)
         .then(function () {
           self.emit('unlistened');
-          cb();
+          if (cb) {
+            cb();
+          }
         });
     } else {
       self.on('listening', _unsubscribe.bind(this, cb));
