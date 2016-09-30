@@ -7,6 +7,15 @@ var sinon = require('sinon');
 
 describe('servicebus', function(){
 
+  before(function (done) {
+    // wait until bus is fully initialized
+    if (!bus.initialized) {
+      bus.on('ready', done);
+    } else {
+      done();
+    }
+  });
+
   describe('#publish & #subscribe', function(){
 
     it('should cause message to be received by subscribe', function (done){
@@ -81,7 +90,7 @@ describe('servicebus', function(){
           subscriptions.forEach(function (subscription) {
             subscription.unsubscribe();
           });
-        } 
+        }
       }, 100);
       var subscription = bus.subscribe('my.event.14', { ack: true }, function (event) {
         count++;
@@ -139,6 +148,32 @@ describe('servicebus', function(){
     // it('should allow for a mixture of ack:true and ack:false subscriptions', function () {
 
     // });
-  
+
+    it('should not receive events after successful unsubscribe', function (done) {
+      var subscribed = false;
+      var subscription = null;
+
+      const unsubscribe = function () {
+        subscription.unsubscribe(function () {
+          subscribed = false;
+          bus.publish('my.event.17', { my: 'event' });
+          setTimeout(done, 500);
+        });
+      };
+
+      const handler = function (event) {
+        if (subscribed) {
+          unsubscribe();
+        } else {
+          throw new Error('unexpected invocation');
+        }
+      };
+
+      subscription = bus.subscribe('my.event.17', handler);
+      setTimeout(function () {
+        subscribed = true;
+        bus.publish('my.event.17', { my: 'event' });
+      }, 100);
+    });
 	});
 });
