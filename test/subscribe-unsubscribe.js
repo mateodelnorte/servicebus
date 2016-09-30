@@ -123,7 +123,7 @@ describe('servicebus', function () {
         const onUnsubscribed = function () {
           subscriptions -= 1;
           if (subscriptions == 0) {
-            bus.publish(testQueue, {test: 4});
+            bus.publish(testQueue, {test: 4}, {ack: true});
             setTimeout(function () {
               receivedEvents.should.be.equal(0);
               done();
@@ -131,8 +131,10 @@ describe('servicebus', function () {
           }
         };
 
-        subscription1.unsubscribe(onUnsubscribed());
-        subscription2.unsubscribe(onUnsubscribed());
+        setTimeout(function () {
+          subscription1.unsubscribe(onUnsubscribed);
+          subscription2.unsubscribe(onUnsubscribed);
+        }, 100);
       });
     });
   });
