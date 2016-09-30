@@ -18,9 +18,14 @@ describe('servicebus', function () {
   describe('#subscribe & #unsubscribe', function () {
     it('should complete subscribe/unsubscribe cycle', function (done) {
       const subscription = bus.subscribe('my.event.11', function (event) {});
+
       subscription
-        .should.be.an.Object()
-        .and.not.equal(bus);
+        .should.not.equal(bus)
+        .and.be.a.Object()
+        .and.have.ownProperty('unsubscribe');
+      subscription.unsubscribe
+        .should.be.a.Function();
+
       subscription.unsubscribe(function () {
         done();
       });
