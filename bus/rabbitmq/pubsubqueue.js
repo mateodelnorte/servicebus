@@ -72,10 +72,15 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
 
   function _unsubscribe (cb) {
     if (self.listening) {
-      self.listenChannel.cancel(self.subscription.consumerTag, function () {
-        self.emit('unlistened');
-        cb();
-      });
+      // cancel misses callback version so we have to use the promise
+      self.listenChannel
+        .cancel(self.subscription.consumerTag)
+        .then(function () {
+          self.emit('unlistened');
+          if (cb) {
+            cb();
+          }
+        });
     } else {
       self.on('listening', _unsubscribe.bind(this, cb));
     }
