@@ -93,7 +93,7 @@ Servicebus allows for middleware packages to enact behavior at the time a messag
   module.exports.bus = bus;
 ```
 
- Middleware may defined one or two functions to modify incoming or outgoing messages:
+ Middleware may define one or two functions to modify incoming or outgoing messages:
 
 ```
 ...
