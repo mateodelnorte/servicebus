@@ -88,7 +88,6 @@ Servicebus allows for middleware packages to enact behavior at the time a messag
   bus.use(bus.package());
   bus.use(bus.correlate());
   bus.use(bus.logger());
-  bus.use(bus.retry());
 
   module.exports.bus = bus;
 ```
