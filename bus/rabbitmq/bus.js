@@ -38,10 +38,7 @@ function RabbitMQBus (options) {
 
   self.log('connecting to rabbitmq on %s', url);
 
-  amqp.connect(url).catch(function (err) {
-    self.log('error connecting to rabbitmq: %s', err);
-    self.emit('error', err);
-  }).done(function (conn) {
+  amqp.connect(url).then(function (conn) {
 
     self.connection = conn;
 
@@ -90,7 +87,7 @@ function RabbitMQBus (options) {
       });
     }
 
-  }, function (err) {
+  }).catch(function (err) {
     self.log('error connecting to rabbitmq: %s', err);
     self.emit('error', err);
   });
