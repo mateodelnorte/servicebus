@@ -1,1 +1,1 @@
-module.exports = require('./bus');
+module.exports = require('./lib');
