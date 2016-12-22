@@ -11,7 +11,7 @@ var amqp = require('amqplib'),
     Queue = require('./queue'),
     util = require('util');
 
-function RabbitMQBus (options) {
+function RabbitMQBus (options, implOpts) {
   var self = this;
 
   options = options || {};
@@ -38,7 +38,7 @@ function RabbitMQBus (options) {
 
   self.log('connecting to rabbitmq on %s', url);
 
-  amqp.connect(url).then(function (conn) {
+  amqp.connect(url, implOpts).then(function (conn) {
 
     self.connection = conn;
 
