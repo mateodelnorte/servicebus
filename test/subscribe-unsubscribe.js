@@ -21,9 +21,9 @@ describe('servicebus', function () {
         const subscription = bus.subscribe('test.subunsub.1', function (event) {});
 
         subscription
-          .should.not.equal(bus)
-          .and.be.a.Object()
+          .should.be.a.Object()
           .and.have.ownProperty('unsubscribe');
+
         subscription.unsubscribe
           .should.be.a.Function();
 
