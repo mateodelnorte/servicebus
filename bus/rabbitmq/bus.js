@@ -40,11 +40,21 @@ function RabbitMQBus (options, implOpts) {
 
   amqp.connect(url, implOpts).then(function (conn) {
 
+    conn.on('close', channelMiscEvent('connection_close'));
+    conn.on('error', channelMiscEvent('connection_error'));
+
     self.connection = conn;
 
     function channelError (err) {
       self.log('channel error with connection %s error: %s', options.url, err.toString());
       self.emit('error', err);
+    }
+
+    function channelMiscEvent(name) {
+      return (payload) => { 
+        self.log('channel event %s: %s', name, payload);
+        self.emit(name, payload);
+      };
     }
 
     function done () {
@@ -57,6 +67,7 @@ function RabbitMQBus (options, implOpts) {
 
     self.connection.createChannel().then(function (channel) {
       channel.on('error', channelError);
+      channel.on('close', channelMiscEvent('channel_close'));
       self.sendChannel = channel;
       if (options.prefetch) {
         self.sendChannel.prefetch(options.prefetch);
@@ -67,6 +78,7 @@ function RabbitMQBus (options, implOpts) {
 
     self.connection.createChannel().then(function (channel) {
       channel.on('error', channelError);
+      channel.on('close', channelMiscEvent('channel_close'));
       self.listenChannel = channel;
       if (options.prefetch) {
         self.listenChannel.prefetch(options.prefetch);
@@ -78,6 +90,7 @@ function RabbitMQBus (options, implOpts) {
     if (options.enableConfirms) {
       self.connection.createConfirmChannel().then(function (channel) {
         channel.on('error', channelError);
+        channel.on('close', channelMiscEvent('channel_close'));
         self.confirmChannel = channel;
         if (options.prefetch) {
           self.confirmChannel.prefetch(options.prefetch);
