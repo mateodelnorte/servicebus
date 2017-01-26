@@ -40,9 +40,6 @@ function RabbitMQBus (options, implOpts) {
 
   amqp.connect(url, implOpts).then(function (conn) {
 
-    conn.on('close', channelEvent('connection_close'));
-    conn.on('error', channelEvent('connection_error'));
-
     self.connection = conn;
 
     function channelError (err) {
@@ -50,12 +47,15 @@ function RabbitMQBus (options, implOpts) {
       self.emit('error', err);
     }
 
-    function channelEvent(name) {
+    function passEvent(name) {
       return function (payload) {
-        self.log('channel event: %s (%s)', name, payload);
+        self.log('passing event: %s; param: %s', name, payload);
         self.emit(name, payload);
       };
     }
+
+    conn.on('close', passEvent('connection_close'));
+    conn.on('error', passEvent('connection_error'));
 
     function done () {
       if (self.channels.length === (options.enableConfirms ? 3 : 2)) {
@@ -67,7 +67,7 @@ function RabbitMQBus (options, implOpts) {
 
     self.connection.createChannel().then(function (channel) {
       channel.on('error', channelError);
-      channel.on('close', channelEvent('channel_close'));
+      channel.on('close', passEvent('channel_close'));
       self.sendChannel = channel;
       if (options.prefetch) {
         self.sendChannel.prefetch(options.prefetch);
@@ -78,7 +78,7 @@ function RabbitMQBus (options, implOpts) {
 
     self.connection.createChannel().then(function (channel) {
       channel.on('error', channelError);
-      channel.on('close', channelEvent('channel_close'));
+      channel.on('close', passEvent('channel_close'));
       self.listenChannel = channel;
       if (options.prefetch) {
         self.listenChannel.prefetch(options.prefetch);
@@ -90,7 +90,7 @@ function RabbitMQBus (options, implOpts) {
     if (options.enableConfirms) {
       self.connection.createConfirmChannel().then(function (channel) {
         channel.on('error', channelError);
-        channel.on('close', channelEvent('channel_close'));
+        channel.on('close', passEvent('channel_close'));
         self.confirmChannel = channel;
         if (options.prefetch) {
           self.confirmChannel.prefetch(options.prefetch);
