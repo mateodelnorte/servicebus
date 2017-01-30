@@ -18,9 +18,9 @@ describe('servicebus', function(){
       }
     });
 
-    it('should emit connection_close event', function (done){
+    it('should emit connectionclose event', function (done){
 
-      bus.on('connection_close', function (event) {
+      bus.on('connection.close', function (event) {
         done();
       });
 
