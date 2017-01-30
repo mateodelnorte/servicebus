@@ -71,7 +71,7 @@ function RabbitMQBus (options, implOpts) {
 
     self.connection.createChannel().then(function (channel) {
       channel.on('error', channelError);
-      channel.on('close', self.emit.bind(self, 'channel_close'));
+      channel.on('close', self.emit.bind(self, 'channel.close'));
       self.listenChannel = channel;
       if (options.prefetch) {
         self.listenChannel.prefetch(options.prefetch);
@@ -83,7 +83,7 @@ function RabbitMQBus (options, implOpts) {
     if (options.enableConfirms) {
       self.connection.createConfirmChannel().then(function (channel) {
         channel.on('error', channelError);
-        channel.on('close', self.emit.bind(self, 'channel_close'));
+        channel.on('close', self.emit.bind(self, 'channel.close'));
         self.confirmChannel = channel;
         if (options.prefetch) {
           self.confirmChannel.prefetch(options.prefetch);

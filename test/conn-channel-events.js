@@ -18,7 +18,7 @@ describe('servicebus', function(){
       }
     });
 
-    it('should emit connectionclose event', function (done){
+    it('should emit connection.close event', function (done){
 
       bus.on('connection.close', function (event) {
         done();
@@ -33,9 +33,9 @@ describe('servicebus', function(){
       }, 10);
     });
 
-    it('should emit channel_close event', function (done){
+    it('should emit channel.close event', function (done){
 
-      bus.once('channel_close', function (event) {
+      bus.once('channel.close', function (event) {
         done();
       });
 
