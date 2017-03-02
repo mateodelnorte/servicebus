@@ -27,7 +27,7 @@ function PubSubQueue (options) {
   this.confirmChannel = options.confirmChannel;
   this.correlator = options.correlator;
   this.errorQueueName = options.queueName + '.error';
-  this.exchangeName = options.exchangeName || 'amq.topic';
+  this.exchangeName = options.exchangeName || this.bus.exchangeName || 'amq.topic';
   this.exchangeOptions = exchangeOptions;
   this.formatter = options.formatter;
   this.initialized = false;
