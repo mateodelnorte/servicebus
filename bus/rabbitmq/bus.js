@@ -22,7 +22,7 @@ function RabbitMQBus (options, implOpts) {
 
   this.assertQueuesOnFirstSend = (options.assertQueuesOnFirstSend === undefined) ? true : options.assertQueuesOnFirstSend;
   this.channels = [];
-  this.correlator = new Correlator(options);
+  this.correlator = options.correlator || new Correlator(options);
   this.delayOnStartup = options.delayOnStartup || 10;
   this.exchangeName = options.exchangeName;
   this.formatter = json;
@@ -105,7 +105,9 @@ util.inherits(RabbitMQBus, Bus);
 
 RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
 
-  this.log('listen on queue %s', queueName);
+  var self = this;
+
+  this.log('listen on queue %j', queueName);
 
   if (typeof options === "function") {
     callback = options;
@@ -120,7 +122,11 @@ RabbitMQBus.prototype.listen = function listen (queueName, options, callback) {
 
   if (this.queues[options.queueName] === undefined) {
     this.log('creating queue %s', options.queueName);
-    this.queues[options.queueName] = new Queue(options);
+    var queue = new Queue(options);
+    queue.on('listening', function () {
+      self.emit('listening', queue);
+    });
+    this.queues[options.queueName] = queue;
   }
 
   this.queues[options.queueName].listen(callback, options);
@@ -214,6 +220,8 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
     options = {};
   }
 
+  this.log('subscribe on queue %j', queueName);
+
   var handle = null;
   function _unsubscribe (options) {
     handle.unsubscribe(options);
@@ -227,7 +235,11 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
 
   if (this.pubsubqueues[options.queueName] === undefined) {
     this.log('creating pusubqueue %s', options.queueName);
-    this.pubsubqueues[options.queueName] = new PubSubQueue(options);
+    var pubSubQueue = new PubSubQueue(options);
+    pubSubQueue.on('subscribed', function () {
+      self.emit('subscribed', pubSubQueue);
+    });
+    this.pubsubqueues[options.queueName] = pubSubQueue;
   }
 
   handle = this.pubsubqueues[options.queueName].subscribe(options, callback);

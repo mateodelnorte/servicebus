@@ -69,11 +69,13 @@ PubSubQueue.prototype.publish = function publish (event, options, cb) {
 
 PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
   var self = this;
-  var listening = false;
+  var subscribed = false;
   var subscription = null;
 
+  this.log('subscribing to queue %j with routingKey %j', this.queueName, this.routingKey);
+
   function _unsubscribe (cb) {
-    if (listening) {
+    if (subscribed) {
       // should we prevent multiple cancel calls?
       self.listenChannel
         .cancel(subscription.consumerTag)
@@ -84,7 +86,7 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
           }
         });
     } else {
-      self.on('listening', _unsubscribe.bind(this, cb));
+      self.on('subscribed', _unsubscribe.bind(this, cb));
     }
   }
 
@@ -119,9 +121,9 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
       });
     }, { noAck: ! self.ack })
       .then(function (ok) {
-        listening = true;
+        subscribed = true;
         subscription = { consumerTag: ok.consumerTag };
-        self.emit('listening');
+        self.emit('subscribed');
       });
   }
 

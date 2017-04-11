@@ -74,7 +74,7 @@ Queue.prototype.listen = function listen (callback, options) {
 
   var self = this;
 
-  this.log('listening to queue %s', this.queueName);
+  this.log('listening to queue %j', this.queueName);
 
   if ( ! this.initialized) {
     return this.on('ready', listen.bind(this, callback, options));
