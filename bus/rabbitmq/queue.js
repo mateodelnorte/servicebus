@@ -90,23 +90,31 @@ Queue.prototype.listen = function listen (callback, options) {
     if (message === null) {
       return;
     }
-    message.content = options.formatter.deserialize(message.content);
-    options.queueType = 'queue';
-    self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
-      // amqplib intercepts errors and closes connections before bubbling up
-      // to domain error handlers when they occur non-asynchronously within
-      // callback. Therefore, if there is a process domain, we try-catch to
-      // redirect the error, assuming the domain creator's intentions.
-      try {
-        callback(message.content, message);
-      } catch (err) {
-        if (process.domain && process.domain.listeners('error')) {
-          process.domain.emit('error', err);
-        } else {
-          self.emit('error', err);
+
+    options.formatter.deserialize(message.content, function (err, content) {
+      if (err) return callback(err);
+
+      message.content = content;
+      options.queueType = 'queue';
+
+      self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
+        // amqplib intercepts errors and closes connections before bubbling up
+        // to domain error handlers when they occur non-asynchronously within
+        // callback. Therefore, if there is a process domain, we try-catch to
+        // redirect the error, assuming the domain creator's intentions.
+        try {
+          callback(message.content, message);
+        } catch (err) {
+          if (process.domain && process.domain.listeners('error')) {
+            process.domain.emit('error', err);
+          } else {
+            self.emit('error', err);
+          }
         }
-      }
+      });
+
     });
+    
   }, { noAck: ! self.ack })
     .then(function (ok) {
       self.listening = true;
@@ -162,7 +170,12 @@ Queue.prototype.send = function send (event, options, cb) {
 
   var channel = cb ? this.confirmChannel : this.sendChannel;
 
-  channel.sendToQueue(this.routingKey || this.queueName, new Buffer(options.formatter.serialize(event)), options, cb);
+  options.formatter.serialize(event, function (err, content) {
+    if (err) return cb(err);
+
+    channel.sendToQueue(self.routingKey || self.queueName, new Buffer(content), options, cb);
+
+  });
 
 };
 
