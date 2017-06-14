@@ -104,9 +104,9 @@ Servicebus allows for middleware packages to enact behavior at the time a messag
     next(null, queueName, message);
   }
 
-  function logOutgoing (message, headers, deliveryInfo, messageHandle, options, next) {    
+  function logOutgoing (queueName, message, options, next) {    
     log('sending ' + util.inspect(message));
-    next(null, message, headers, deliveryInfo, messageHandle, options);
+    next(null, queueName, message, options);
   }
 
   return {
