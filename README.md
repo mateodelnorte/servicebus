@@ -99,9 +99,9 @@ Servicebus allows for middleware packages to enact behavior at the time a messag
 ```js
 ...
 
-  function logIncoming (queueName, message, next) {
+  function logIncoming (queueName, message, options, next) {
     log('received ' + util.inspect(message));
-    next(null, queueName, message);
+    next(null, queueName, message, options);
   }
 
   function logOutgoing (queueName, message, options, next) {    
