@@ -25,6 +25,7 @@ function RabbitMQBus (options, implOpts) {
   this.correlator = options.correlator || new Correlator(options);
   this.delayOnStartup = options.delayOnStartup || 10;
   this.exchangeName = options.exchangeName;
+  this.exchangeOptions = options.exchangeOptions;
   this.formatter = json;
   this.initialized = false;
   this.log = options.log || log;
@@ -176,6 +177,8 @@ RabbitMQBus.prototype.setOptions = function (queueName, options) {
     bus: this,
     confirmChannel: this.confirmChannel,
     correlator: this.correlator,
+    exchangeName: this.exchangeName,
+    exchangeOptions: this.exchangeOptions,
     formatter: this.formatter,
     listenChannel: this.listenChannel,
     log: this.log,
