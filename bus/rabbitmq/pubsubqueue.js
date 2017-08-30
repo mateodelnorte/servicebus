@@ -1,6 +1,5 @@
 var events = require('events');
 var extend = require('extend');
-var newId = require('node-uuid').v4;
 var util = require('util');
 
 function PubSubQueue (options) {
