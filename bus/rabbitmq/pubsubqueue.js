@@ -93,7 +93,7 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
         return;
       }
       // todo: map contentType to default formatters
-      message.content = options.formatter.deserialize(message.content);
+      message.content = options.formatter.deserialize(message.content.toString());
       options.queueType = 'pubsubqueue';
       self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
         // amqplib intercepts errors and closes connections before bubbling up
