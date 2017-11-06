@@ -1,7 +1,7 @@
 module.exports.deserialize = function deserialize (content) {
   
   try {
-    content = JSON.parse(content);
+    content = JSON.parse(content.toString());
   } catch (err) {
     throw err;
   }
