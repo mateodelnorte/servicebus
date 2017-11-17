@@ -7,8 +7,6 @@ module.exports = function (options) {
   var log = options.log || debug(label);
   // allow users to pass in leveled log libs like bunyan or pino
   // and use log.info if a leveled logger
-  // this worked previously with bunyan, but not pino
-  // this change allows both
   log = log.info || log;
   fnIncoming = options.fnIncoming || function (channel, message, options, next) {
     log(util.format('received %j via routingKey %s', message.content, message.fields.routingKey));
