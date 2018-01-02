@@ -10,11 +10,29 @@ var amqp = require('amqplib'),
     Queue = require('./queue'),
     util = require('util');
 
+function getRabbitMQUrl (options) {
+  var rabbitUrl = options.url || process.env.RABBITMQ_URL;
+  if (!rabbitUrl) {
+    // see if url can be built with user and password
+    if (options.user && options.password) {
+      var auth = util.format('%s:%s', options.user, options.password);
+      var host = options.host || 'localhost';
+      var port = options.port || 5672;
+      log('Creating RabbitMQ URL %s@%s:%s', options.user, host, port)
+      rabbitUrl = util.format('amqp://%s@%s:%s', auth, host, port);
+    } else {
+      log('RabbitMQ URL could not be determined. Using default amqp://localhost');
+      rabbitUrl = 'amqp://localhost';
+    }
+  }
+  return rabbitUrl;
+}
+
 function RabbitMQBus (options, implOpts) {
   var self = this;
 
   options = options || {};
-  options.url = options.url || process.env.RABBITMQ_URL || 'amqp://localhost';
+  options.url = getRabbitMQUrl(options)
   options.vhost = options.vhost || process.env.RABBITMQ_VHOST;
   options.exchangeName = options.exchangeName || 'amq.topic';
   options.exchangeOptions = options.exchangeOptions || {};
