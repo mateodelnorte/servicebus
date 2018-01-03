@@ -3,8 +3,14 @@
   "contributors": [
     "mattwalters5@gmail.com",
     "timisbusy@gmail.com",
-    "mail@chrisabrams.com"
+    "mail@chrisabrams.com",
+    "pat@patscott.io"
   ],
+  "scripts": {
+    "test": "NODE_ENV=test jest --config jest.json --coverage --verbose",
+    "test:watch": "NODE_ENV=test jest --config jest.json --watch --coverage --verbose",
+    "test:staging": "make test"
+  },
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
   "version": "2.0.10",
@@ -24,6 +30,7 @@
     "readable-id": "0.0.3"
   },
   "devDependencies": {
+    "jest": "^22.0.4",
     "longjohn": "~0.2.9",
     "mocha": ">=2.3.3",
     "servicebus-retry": "0.0.9",
