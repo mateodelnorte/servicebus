@@ -47,7 +47,7 @@ bus.listen('my.event', { ack: true }, function (event) {
 
 ### Fully qualified url
 
-You may authenticate by providing `url` as an option when initializin the bus, or setting RABBITMQ_URL as an environment variable. RabbitMQ uses basic auth url format for authentication.
+You may authenticate by providing `url` as an option when initializing the bus, or setting RABBITMQ_URL as an environment variable. RabbitMQ uses basic auth url format for authentication.
 
 ```
 var bus = servicebus.bus({
