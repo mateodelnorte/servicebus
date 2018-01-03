@@ -10,7 +10,7 @@ var amqp = require('amqplib'),
     Queue = require('./queue'),
     util = require('util');
 
-module.exports.getRabbitMQUrl = function getRabbitMQUrl (options) {
+function getRabbitMQUrl (options) {
   var rabbitUrl = options.url || process.env.RABBITMQ_URL;
   if (!rabbitUrl) {
     // see if url can be built with user and password
@@ -308,4 +308,5 @@ RabbitMQBus.prototype.close = function close () {
 
 };
 
+module.exports.getRabbitMQUrl = getRabbitMQUrl;
 module.exports.Bus = RabbitMQBus;

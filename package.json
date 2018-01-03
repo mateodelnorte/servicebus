@@ -9,7 +9,7 @@
   "scripts": {
     "test": "NODE_ENV=test jest --config jest.json --coverage --verbose",
     "test:watch": "NODE_ENV=test jest --config jest.json --watch --coverage --verbose",
-    "test:staging": "make test"
+    "test:staging": "mocha -R spec --recursive"
   },
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
