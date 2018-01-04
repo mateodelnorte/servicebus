@@ -7,9 +7,11 @@
     "pat@patscott.io"
   ],
   "scripts": {
+    "commit": "git-cz",
     "test": "NODE_ENV=test jest --config jest.json --coverage --verbose",
     "test:watch": "NODE_ENV=test jest --config jest.json --watch --coverage --verbose",
-    "test:staging": "mocha -R spec --recursive --exit"
+    "test:staging": "mocha -R spec --recursive --exit",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
@@ -30,12 +32,20 @@
     "readable-id": "0.0.3"
   },
   "devDependencies": {
+    "commitizen": "^2.9.6",
+    "cz-conventional-changelog": "^2.1.0",
     "jest": "^22.0.4",
     "longjohn": "~0.2.9",
     "mocha": ">=2.3.3",
+    "semantic-release": "^11.0.2",
     "servicebus-retry": "0.0.9",
     "should": "7.1.0",
     "sinon": "~1.17.1"
   },
-  "optionalDependencies": {}
+  "optionalDependencies": {},
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
 }
