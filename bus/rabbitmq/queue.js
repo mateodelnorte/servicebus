@@ -7,7 +7,7 @@ function Queue (options) {
   var queueOptions = options.queueOptions || {};
 
   extend(queueOptions, {
-    autoDelete: options.autoDelete || ! (options.ack || options.acknowledge),
+    autoDelete: options.autoDelete === undefined ? ! (options.ack || options.acknowledge) : options.autoDelete,
     contentType: options.contentType || 'application/json',
     durable: Boolean(options.ack || options.acknowledge),
     exclusive: options.exclusive || false,
