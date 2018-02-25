@@ -1,0 +1,23 @@
+version: '3.3'
+
+networks:
+  servicebus:
+
+services:
+
+  tests:
+    image: node
+    volumes:
+      - .:/usr/src/
+    working_dir: /usr/src/
+    user: node
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    networks:
+      - servicebus
+    command: npm run test:staging
+
+  rabbitmq:
+    image: rabbitmq:3.6-management
+    networks:
+      - servicebus

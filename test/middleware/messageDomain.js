@@ -30,7 +30,7 @@ describe('messageDomain', function() {
   });
 
   /* TODO: determine which resources are being shared between buses and fix the following to work with all tests, in addition to by itself (which it is now) */
-  xit('should catch errors with domains when onError supplied', function (done) {
+  it('should catch errors with domains when onError supplied', function (done) {
     var busUrl = process.env.RABBITMQ_URL;
 
     var domainBus = require('../../').bus({ url: busUrl });
@@ -53,6 +53,7 @@ describe('messageDomain', function() {
   });
 
   /* TODO: determine which resources are being shared between buses and fix the following to work with all tests, in addition to by itself (which it is now) */
+  /* TODO: Error: bus.retry() middleware is deprecated. please use https://github.com/mateodelnorte/servicebus-retry instead - should this test even exist? */
   xit('should send to error queue after five retries', function (done) {
     var busUrl = process.env.RABBITMQ_URL;
 

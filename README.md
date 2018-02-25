@@ -43,6 +43,34 @@ bus.listen('my.event', { ack: true }, function (event) {
 
   Message acknowledgement is suited for use in load distribution scenarios. 
 
+## Authentication (RabbitMQ Bus)
+
+### Fully qualified url
+
+You may authenticate by providing `url` as an option when initializing the bus, or setting RABBITMQ_URL as an environment variable. RabbitMQ uses basic auth url format for authentication.
+
+```
+var bus = servicebus.bus({
+  url: "amqp://user:pass@localhost:5672,
+})
+```
+
+### config options
+
+Alternatively, you may provide a `user`, `password`, `host` (optional, default = 'localhost'), and `port` (optional, default = 5672), and servicebus will construct the url before passing it to RabbitMQ.
+
+```
+var bus = servicebus.bus({
+  user: 'rabbitUser',
+  password: 'test1234',
+  host: '1.1.1.1'
+  port: '5555'
+})
+```
+
+NOTE:
+If `url` and `user/password` are provided, the `url` will be used.
+
 # Publish / Subscribe
 
   Servicebus can also send messages from 1:N processes in a fan-out architecture. In this pattern, one sender publishes a message and any number of subscribers can receive. The pattern for usage looks very similar to send/listen:

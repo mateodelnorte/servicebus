@@ -1,0 +1,11 @@
+{
+  "roots": ["__tests__"],
+  "testEnvironment": "node",
+  "modulePaths": [
+    "bus",
+    "/node_modules/"
+  ],
+  "collectCoverageFrom" : [
+    "bus/**/*.js"
+  ]
+}
