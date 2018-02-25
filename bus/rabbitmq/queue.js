@@ -90,7 +90,7 @@ Queue.prototype.listen = function listen (callback, options) {
     if (message === null) {
       return;
     }
-    message.content = options.formatter.deserialize(message.content);
+    message.content = options.formatter.deserialize(message.content.toString());
     options.queueType = 'queue';
     self.bus.handleIncoming(self.listenChannel, message, options, function (channel, message, options) {
       // amqplib intercepts errors and closes connections before bubbling up
