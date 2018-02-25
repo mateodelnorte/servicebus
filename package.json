@@ -1,4 +1,7 @@
 {
+  "name": "servicebus",
+  "description": "Simple service bus for sending events between processes using amqp.",
+  "version": "2.2.0",
   "author": "Matt Walters <mattwalters5@gmail.com>",
   "contributors": [
     "mattwalters5@gmail.com",
@@ -13,9 +16,6 @@
     "test:staging": "mocha -R spec --recursive",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
-  "name": "servicebus",
-  "description": "Simple service bus for sending events between processes using amqp.",
-  "version": "2.1.0",
   "homepage": "https://github.com/mateodelnorte/servicebus",
   "repository": {
     "type": "git",
