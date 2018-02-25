@@ -10,7 +10,7 @@ services:
     volumes:
       - .:/usr/src/
     working_dir: /usr/src/
-    user: node
+    user: root
     environment:
       RABBITMQ_URL: amqp://rabbitmq:5672
     networks:
