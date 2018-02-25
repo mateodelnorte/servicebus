@@ -48,7 +48,7 @@ before_install:
   # before doing the update.
   - docker-compose --version
 
-  - docker-compose pull
+  - docker-compose pull -f docker-compose.tests.yml
 
   # You will want this for logging. If one of your containers does not build for
   # whatever reason it's best to report that now before your tests start
