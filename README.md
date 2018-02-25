@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mateodelnorte/servicebus.svg?branch=master)](https://travis-ci.org/mateodelnorte/servicebus)
+
 # servicebus
 
   Simple service bus for sending events between processes using amqp. Allows for send/receive and publish/subscribe pattern messaging over RabbitMQ.  
