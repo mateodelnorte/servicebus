@@ -21,3 +21,5 @@ services:
     image: rabbitmq:3.6-management
     networks:
       - servicebus
+    ports:
+      - 5672:5672
