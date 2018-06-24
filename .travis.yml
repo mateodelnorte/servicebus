@@ -21,9 +21,10 @@ notifications:
     on_start: never     # options: [always|never|change] default: always
 
 node_js:
+  - 'node'
+  - '9'
   - '8'
   - '6'
-  - '4'
 
 before_install:
   # update is required to update the repositories to see the new packages for

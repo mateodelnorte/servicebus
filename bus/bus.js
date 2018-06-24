@@ -1,5 +1,5 @@
 var EventEmitter = require('events').EventEmitter;
-var readableId = require('readable-id');
+var readableId = require('readable-id-mjs');
 var util = require('util');
 
 function Bus () {
