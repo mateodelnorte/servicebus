@@ -1,8 +1,8 @@
-const getRabbitMQUrl = require('rabbitmq/bus').getRabbitMQUrl
+var getRabbitMQUrl = require('rabbitmq/bus').getRabbitMQUrl
 
-describe('getRabbitMQUrl', () => {
-  it('determines url based on options available', () => {
-    let url = getRabbitMQUrl({ url: 'amqp://rabbitmq:5672' })
+describe('getRabbitMQUrl', function() {
+  it('determines url based on options available', function() {
+    var url = getRabbitMQUrl({ url: 'amqp://rabbitmq:5672' })
     expect(url).toBe('amqp://rabbitmq:5672')
 
     url = getRabbitMQUrl({ user: 'pat', password: 'test1234' })
