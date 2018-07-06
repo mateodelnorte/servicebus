@@ -36,6 +36,7 @@ function RabbitMQBus (options, implOpts) {
   options.vhost = options.vhost || process.env.RABBITMQ_VHOST;
   options.exchangeName = options.exchangeName || 'amq.topic';
   options.exchangeOptions = options.exchangeOptions || {};
+  options.alternateExchangeOptions = options.alternateExchangeOptions || {};
 
   this.assertQueuesOnFirstSend = (options.assertQueuesOnFirstSend === undefined) ? true : options.assertQueuesOnFirstSend;
   this.channels = [];
@@ -43,6 +44,8 @@ function RabbitMQBus (options, implOpts) {
   this.delayOnStartup = options.delayOnStartup || 10;
   this.exchangeName = options.exchangeName;
   this.exchangeOptions = options.exchangeOptions;
+  this.alternateExchangeName = options.alternateExchangeName,
+  this.alternateExchangeOptions = options.alternateExchangeOptions;
   this.formatter = json;
   this.initialized = false;
   this.log = options.log || log;
@@ -196,6 +199,8 @@ RabbitMQBus.prototype.setOptions = function (queueName, options) {
     correlator: this.correlator,
     exchangeName: this.exchangeName,
     exchangeOptions: this.exchangeOptions,
+    alternateExchangeName: this.alternateExchangeName,
+    alternateExchangeOptions: this.alternateExchangeOptions,
     formatter: this.formatter,
     listenChannel: this.listenChannel,
     log: this.log,
