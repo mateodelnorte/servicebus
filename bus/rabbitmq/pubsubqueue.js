@@ -19,9 +19,14 @@ function PubSubQueue (options) {
   extend(exchangeOptions, {
     type: exchangeOptions.type || 'topic',
     durable: exchangeOptions.durable === false ? false : true,
-    autoDelete: exchangeOptions.autoDelete || false,
-    alternateExchange: options.alternateExchangeName || ''
+    autoDelete: exchangeOptions.autoDelete || false
   });
+
+  if (options.alternateExchangeName) {
+    extend(exchangeOptions, {
+      alternateExchange: options.alternateExchangeName
+    });
+  }
 
   extend(alternateExchangeOptions, {
     type: alternateExchangeOptions.type || 'fanout',
