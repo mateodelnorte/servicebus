@@ -17,7 +17,7 @@ function PubSubQueue (options) {
 
   extend(exchangeOptions, {
     type: exchangeOptions.type || 'topic',
-    durable: exchangeOptions.durable === false ? false : true,
+    durable: exchangeOptions.durable !== false,
     autoDelete: exchangeOptions.autoDelete || false
   });
 

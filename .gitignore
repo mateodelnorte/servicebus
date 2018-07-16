@@ -2,5 +2,6 @@ node_modules
 .queues
 .DS_Store
 .queues
+.idea
 npm-debug.log
 coverage

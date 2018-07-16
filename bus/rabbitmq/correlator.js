@@ -1,7 +1,7 @@
 var cluster = require('cluster');
 var events = require('events'),
     fs = require('fs'),
-    newId = require('node-uuid'),
+    newId = require('uuid/v1'),
     path = require('path'),
     util = require('util');
 var warn = require('debug')('servicebus:warn');
@@ -29,7 +29,7 @@ function Correlator (options) {
       this.queues = JSON.parse(buf.toString());
     } catch (error) {
       this.queues = {};
-    } 
+    }
     this.initialized = true;
     this.emit('ready');
   }.bind(this));
