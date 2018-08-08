@@ -232,6 +232,13 @@ RabbitMQBus.prototype.send = function send (queueName, message, options, cb) {
 
 };
 
+function SubscribeReceipt(unsubscribe) {
+  this.unsubscribe = unsubscribe;
+  events.EventEmitter.call(this);
+}
+
+util.inherits(SubscribeReceipt, events.EventEmitter);
+
 RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callback) {
   var self = this;
 
@@ -264,9 +271,13 @@ RabbitMQBus.prototype.subscribe = function subscribe (queueName, options, callba
 
   handle = this.pubsubqueues[options.queueName].subscribe(options, callback);
 
-  return {
-    unsubscribe: _unsubscribe
-  };
+  const receipt = new SubscribeReceipt(_unsubscribe);
+
+  handle.on('subscribed', function () {
+    receipt.emit('subscribed');
+  });
+
+  return receipt;
 
 };
 

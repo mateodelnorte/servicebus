@@ -1,7 +1,7 @@
 {
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "author": "Matt Walters <mattwalters5@gmail.com>",
   "contributors": [
     "mattwalters5@gmail.com",

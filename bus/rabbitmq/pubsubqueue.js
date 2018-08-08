@@ -66,6 +66,13 @@ PubSubQueue.prototype.publish = function publish (event, options, cb) {
 
 };
 
+function SubscribeReceipt(unsubscribe) {
+  this.unsubscribe = unsubscribe;
+  events.EventEmitter.call(this);
+}
+
+util.inherits(SubscribeReceipt, events.EventEmitter);
+
 PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
   var self = this;
   var subscribed = false;
@@ -77,17 +84,19 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
     if (subscribed) {
       // should we prevent multiple cancel calls?
       self.listenChannel
-        .cancel(subscription.consumerTag)
-        .then(function () {
-          self.emit('unlistened');
-          if (cb) {
-            cb();
-          }
-        });
+      .cancel(subscription.consumerTag)
+      .then(function () {
+        self.emit('unlistened');
+        if (cb) {
+          cb();
+        }
+      });
     } else {
       self.on('subscribed', _unsubscribe.bind(this, cb));
     }
   }
+
+  var receipt = new SubscribeReceipt(_unsubscribe);
 
   function _subscribe (uniqueName) {
     self.listenChannel.consume(uniqueName, function (message) {
@@ -123,6 +132,7 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
         subscribed = true;
         subscription = { consumerTag: ok.consumerTag };
         self.emit('subscribed');
+        receipt.emit('subscribed');
       });
   }
 
@@ -147,9 +157,7 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
       });
   });
 
-  return {
-    unsubscribe: _unsubscribe
-  };
+  return receipt;
 };
 
 module.exports = PubSubQueue;
