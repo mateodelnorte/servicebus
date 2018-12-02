@@ -183,3 +183,9 @@ becomes
 https://github.com/mateodelnorte/servicebus-retry
 
 Retry provides ability to specify a max number of times an erroring message will be retried before being placed on an error queue. The retry middleware requires the correlate middleware. 
+
+# Contributing
+
+servicebus uses `semantic-release` for deploys.
+
+Commits must follow [Conventional Changelog](https://github.com/conventional-changelog/conventional-changelog) to accurately calculate new versions.
