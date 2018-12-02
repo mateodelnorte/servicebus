@@ -1,7 +1,7 @@
 var cluster = require('cluster');
 var events = require('events'),
     fs = require('fs'),
-    newId = require('node-uuid'),
+    newId = require('uuid/v1'),
     path = require('path'),
     util = require('util');
 var warn = require('debug')('servicebus:warn');

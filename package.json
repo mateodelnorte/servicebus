@@ -29,8 +29,8 @@
     "amqplib": "^0.5.2",
     "debug": "^2.2.0",
     "extend": "^3.0.0",
-    "node-uuid": "^1.4.3",
-    "readable-id-mjs": "^1.0.0"
+    "readable-id-mjs": "^1.0.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "commitizen": "^2.9.6",
