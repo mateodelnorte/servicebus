@@ -21,7 +21,7 @@ notifications:
     on_start: never     # options: [always|never|change] default: always
 
 node_js:
-  - 'node'
+  - '10'
   - '9'
   - '8'
   - '6'
@@ -64,7 +64,7 @@ script:
   - make docker-test
 
 after_success:
-  - npm run semantic-release
+  - npm run travis-deploy-once "npm run semantic-release"
 
 branches:
   except:

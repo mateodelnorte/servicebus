@@ -1,7 +1,7 @@
 {
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
-  "version": "2.2.2",
+  "version": "0.0.0-development",
   "author": "Matt Walters <mattwalters5@gmail.com>",
   "contributors": [
     "mattwalters5@gmail.com",
@@ -14,12 +14,12 @@
     "test": "NODE_ENV=test jest --config jest.json --coverage --verbose",
     "test:watch": "NODE_ENV=test jest --config jest.json --watch --coverage --verbose",
     "test:staging": "mocha -R spec --recursive --exit",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "semantic-release": "semantic-release"
   },
   "homepage": "https://github.com/mateodelnorte/servicebus",
   "repository": {
     "type": "git",
-    "url": "git://github.com/mateodelnorte/servicebus.git"
+    "url": "https://github.com/mateodelnorte/servicebus.git"
   },
   "engines": {
     "node": "0.6 || 0.8 || 0.9 || 0.10 || 0.12"
@@ -37,10 +37,11 @@
     "jest": "^22.0.4",
     "longjohn": "~0.2.9",
     "mocha": ">=2.3.3",
-    "semantic-release": "^11.0.2",
+    "semantic-release": "^15.12.3",
     "servicebus-retry": "0.0.12",
     "should": "7.1.0",
-    "sinon": "~1.17.1"
+    "sinon": "~1.17.1",
+    "travis-deploy-once": "^5.0.9"
   },
   "optionalDependencies": {},
   "config": {
