@@ -14,7 +14,8 @@
     "test": "NODE_ENV=test jest --config jest.json --coverage --verbose",
     "test:watch": "NODE_ENV=test jest --config jest.json --watch --coverage --verbose",
     "test:staging": "mocha -R spec --recursive --exit",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "travis-deploy-once": "travis-deploy-once"
   },
   "homepage": "https://github.com/mateodelnorte/servicebus",
   "repository": {
