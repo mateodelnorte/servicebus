@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/mateodelnorte/servicebus.svg?branch=master)](https://travis-ci.org/mateodelnorte/servicebus)
+[![Build Status](https://travis-ci.org/mateodelnorte/servicebus.svg?branch=master)](https://travis-ci.org/mateodelnorte/servicebus) [![Greenkeeper badge](https://badges.greenkeeper.io/mateodelnorte/servicebus.svg)](https://greenkeeper.io/)
 
 # servicebus
 
