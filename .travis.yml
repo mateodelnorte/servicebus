@@ -21,6 +21,7 @@ notifications:
     on_start: never     # options: [always|never|change] default: always
 
 node_js:
+  - '11'
   - '10'
   - '9'
   - '8'
