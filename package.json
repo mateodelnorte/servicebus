@@ -1,7 +1,7 @@
 {
   "name": "servicebus",
   "description": "Simple service bus for sending events between processes using amqp.",
-  "version": "2.3.0-fork",
+  "version": "0.0.0-development",
   "author": "Matt Walters <mattwalters5@gmail.com>",
   "contributors": [
     "mattwalters5@gmail.com",
@@ -14,33 +14,35 @@
     "test": "NODE_ENV=test jest --config jest.json --coverage --verbose",
     "test:watch": "NODE_ENV=test jest --config jest.json --watch --coverage --verbose",
     "test:staging": "mocha -R spec --recursive --exit",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "semantic-release": "semantic-release",
+    "travis-deploy-once": "travis-deploy-once"
   },
   "homepage": "https://github.com/mateodelnorte/servicebus",
   "repository": {
     "type": "git",
-    "url": "git://github.com/mateodelnorte/servicebus.git"
+    "url": "https://github.com/mateodelnorte/servicebus.git"
   },
   "engines": {
     "node": "0.6 || 0.8 || 0.9 || 0.10 || 0.12"
   },
   "dependencies": {
     "amqplib": "^0.5.2",
-    "debug": "^2.2.0",
+    "debug": "^4.1.0",
     "extend": "^3.0.0",
-    "node-uuid": "^1.4.3",
-    "readable-id-mjs": "^1.0.0"
+    "readable-id-mjs": "^1.0.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "commitizen": "^2.9.6",
+    "commitizen": "^3.0.5",
     "cz-conventional-changelog": "^2.1.0",
-    "jest": "^22.0.4",
+    "jest": "^23.6.0",
     "longjohn": "~0.2.9",
     "mocha": ">=2.3.3",
-    "semantic-release": "^11.0.2",
-    "servicebus-retry": "0.0.12",
-    "should": "7.1.0",
-    "sinon": "~1.17.1"
+    "semantic-release": "^15.12.3",
+    "servicebus-retry": "0.0.13",
+    "should": "13.2.3",
+    "sinon": "~7.1.1",
+    "travis-deploy-once": "^5.0.9"
   },
   "optionalDependencies": {},
   "config": {

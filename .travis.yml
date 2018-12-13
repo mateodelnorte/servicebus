@@ -21,7 +21,8 @@ notifications:
     on_start: never     # options: [always|never|change] default: always
 
 node_js:
-  - 'node'
+  - '11'
+  - '10'
   - '9'
   - '8'
   - '6'
@@ -53,7 +54,10 @@ before_install:
   # whatever reason it's best to report that now before your tests start
   # otherwise it can be really tricky to debug why tests are failing sometimes.
   - docker ps
+  - npm i -g npm@latest
 
+install:
+  - npm install
 
 before_script:
   # - npm run lint
@@ -64,7 +68,7 @@ script:
   - make docker-test
 
 after_success:
-  - npm run semantic-release
+  - npm run travis-deploy-once "npm run semantic-release"
 
 branches:
   except:
