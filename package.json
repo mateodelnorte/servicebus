@@ -24,21 +24,21 @@
     "node": "0.6 || 0.8 || 0.9 || 0.10 || 0.12"
   },
   "dependencies": {
-    "amqplib": "^0.5.2",
-    "debug": "^4.1.0",
-    "extend": "^3.0.0",
-    "readable-id-mjs": "^1.0.0",
-    "uuid": "^3.3.2"
+    "amqplib": "0.5.3",
+    "debug": "4.1.0",
+    "extend": "3.0.2",
+    "readable-id-mjs": "1.0.0",
+    "uuid": "3.3.2"
   },
   "devDependencies": {
-    "commitizen": "^3.0.5",
-    "cz-conventional-changelog": "^2.1.0",
-    "jest": "^23.6.0",
-    "longjohn": "~0.2.9",
-    "mocha": ">=2.3.3",
+    "commitizen": "3.0.5",
+    "cz-conventional-changelog": "2.1.0",
+    "jest": "23.6.0",
+    "longjohn": "0.2.12",
+    "mocha": "5.2.0",
     "servicebus-retry": "0.0.13",
     "should": "13.2.3",
-    "sinon": "~7.1.1"
+    "sinon": "7.1.1"
   },
   "optionalDependencies": {},
   "config": {
