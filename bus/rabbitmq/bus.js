@@ -111,6 +111,8 @@ function RabbitMQBus (options, implOpts) {
       });
     }
 
+    return self.connection;
+
   }).catch(function (err) {
     self.log('error connecting to rabbitmq: %s', err);
     self.emit('error', err);
