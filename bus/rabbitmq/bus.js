@@ -85,6 +85,7 @@ function RabbitMQBus (options, implOpts) {
       }
       self.channels.push(channel);
       done();
+      return channel;
     });
 
     self.connection.createChannel().then(function (channel) {
@@ -96,6 +97,7 @@ function RabbitMQBus (options, implOpts) {
       }
       self.channels.push(channel);
       done();
+      return channel;
     });
 
     if (options.enableConfirms) {
@@ -108,6 +110,7 @@ function RabbitMQBus (options, implOpts) {
         }
         self.channels.push(channel);
         done();
+        return channel;
       });
     }
 
@@ -174,6 +177,7 @@ RabbitMQBus.prototype.destroyListener = function removeListener (queueName, opti
       this.listenChannel.deleteQueue(queueName, { ifEmpty: false })
         .then(function (ok) {
           em.emit('success');
+          return ok;
         });
       return em;
     }
