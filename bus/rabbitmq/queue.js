@@ -49,14 +49,16 @@ function Queue (options) {
         var errorQueueOptions = extend(self.queueOptions, {
           autoDelete: options.autoDeleteErrorQueue || false
         });
-        self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions)
+        return self.listenChannel.assertQueue(self.errorQueueName, self.queueOptions)
         .then(function (_qok) {
           self.initialized = true;
           self.emit('ready');
+          return _qok;
         });
       } else {
         self.initialized = true;
         self.emit('ready');
+        return this;
       }
     }).catch(function (err) {
       self.log('error connecting to queue %s. error: %s', options.queueName, err.toString());
@@ -112,6 +114,7 @@ Queue.prototype.listen = function listen (callback, options) {
       self.listening = true;
       self.subscription = { consumerTag: ok.consumerTag };
       self.emit('listening');
+      return ok;
     });
 
 };
@@ -123,6 +126,7 @@ Queue.prototype.destroy = function destroy (options) {
   this.listenChannel.deleteQueue(this.queueName)
     .then(function (ok) {
       em.emit('success');
+      return ok;
     });
   if (this.errorQueueName && this.ack) {
     this.listenChannel.deleteQueue(this.errorQueueName, { ifEmpty: true });
@@ -137,10 +141,11 @@ Queue.prototype.unlisten = function unlisten () {
   if (this.listening) {
     this.listenChannel.cancel(this.subscription.consumerTag)
       .then(function (err, ok) {
-      delete self.subscription;
-      self.listening = false;
-      self.bus.emit('unlistened', self);
-      em.emit('success');
+        delete self.subscription;
+        self.listening = false;
+        self.bus.emit('unlistened', self);
+        em.emit('success');
+        return ok;
     });
   } else {
     this.on('listening', unlisten.bind(this));
@@ -162,7 +167,7 @@ Queue.prototype.send = function send (event, options, cb) {
 
   var channel = cb ? this.confirmChannel : this.sendChannel;
 
-  channel.sendToQueue(this.routingKey || this.queueName, new Buffer(options.formatter.serialize(event)), options, cb);
+  channel.sendToQueue(this.routingKey || this.queueName, Buffer.from(options.formatter.serialize(event)), options, cb);
 
 };
 

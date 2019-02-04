@@ -62,7 +62,7 @@ PubSubQueue.prototype.publish = function publish (event, options, cb) {
 
   var channel = cb ? self.confirmChannel : self.sendChannel;
 
-  channel.publish(self.exchangeName, self.routingKey || self.queueName, new Buffer(options.formatter.serialize(event)), options, cb);
+  channel.publish(self.exchangeName, self.routingKey || self.queueName, Buffer.from(options.formatter.serialize(event)), options, cb);
 
 };
 
@@ -90,6 +90,7 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
         if (cb) {
           cb();
         }
+        return this;
       });
     } else {
       self.on('subscribed', _unsubscribe.bind(this, cb));
@@ -133,12 +134,13 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
         subscription = { consumerTag: ok.consumerTag };
         self.emit('subscribed');
         receipt.emit('subscribed');
+        return ok;
       });
   }
 
   self.correlator.queueName(options, function (err, uniqueName) {
     if (err) throw err;
-    self.listenChannel.assertQueue(uniqueName, self.queueOptions)
+    return self.listenChannel.assertQueue(uniqueName, self.queueOptions)
       .then(function (qok) {
         return self.listenChannel.bindQueue(uniqueName, self.exchangeName, self.routingKey || self.queueName);
       }).then(function () {
@@ -147,12 +149,12 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
           var errorQueueOptions = extend(self.queueOptions, {
             autoDelete: options.autoDeleteErrorQueue || false
           });
-          self.listenChannel.assertQueue(self.errorQueueName, errorQueueOptions)
+          return self.listenChannel.assertQueue(self.errorQueueName, errorQueueOptions)
           .then(function (_qok) {
-            _subscribe(uniqueName);
+            return _subscribe(uniqueName);
           });
         } else {
-          _subscribe(uniqueName);
+          return _subscribe(uniqueName);
         }
       });
   });
