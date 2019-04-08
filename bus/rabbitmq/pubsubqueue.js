@@ -5,6 +5,7 @@ var util = require('util');
 function PubSubQueue (options) {
   options = options || {};
   var exchangeOptions = options.exchangeOptions || {};
+  var alternateExchangeOptions = options.alternateExchangeOptions || {};
   var queueOptions = options.queueOptions || {};
 
   extend(queueOptions, {
@@ -21,6 +22,18 @@ function PubSubQueue (options) {
     autoDelete: exchangeOptions.autoDelete || false
   });
 
+  if (options.alternateExchangeName) {
+    extend(exchangeOptions, {
+      alternateExchange: options.alternateExchangeName
+    });
+  }
+
+  extend(alternateExchangeOptions, {
+    type: alternateExchangeOptions.type || 'fanout',
+    durable: alternateExchangeOptions.durable === false ? false : true,
+    autoDelete: alternateExchangeOptions.autoDelete || false
+  });
+
   this.ack = (options.ack || options.acknowledge);
   this.bus = options.bus;
   this.confirmChannel = options.confirmChannel;
@@ -28,6 +41,9 @@ function PubSubQueue (options) {
   this.errorQueueName = options.queueName + '.error';
   this.exchangeName = options.exchangeName || this.bus.exchangeName || 'amq.topic';
   this.exchangeOptions = exchangeOptions;
+  this.alternateExchange = options.alternateExchange === true ? true : false;
+  this.alternateExchangeName = options.alternateExchangeName || '';
+  this.alternateExchangeOptions = alternateExchangeOptions;
   this.formatter = options.formatter;
   this.initialized = false;
   this.listening = false;
@@ -42,6 +58,10 @@ function PubSubQueue (options) {
 
   this.log('asserting exchange %s', this.exchangeName);
   this.sendChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
+
+  if (this.alternateExchangeName) {
+    this.sendChannel.assertExchange(this.alternateExchangeName, this.alternateExchangeOptions.type || 'fanout', this.alternateExchangeOptions);
+  }
 
   if (this.confirmChannel) {
     this.confirmChannel.assertExchange(this.exchangeName, this.exchangeOptions.type || 'topic', this.exchangeOptions);
@@ -142,7 +162,8 @@ PubSubQueue.prototype.subscribe = function subscribe (options, callback) {
     if (err) throw err;
     return self.listenChannel.assertQueue(uniqueName, self.queueOptions)
       .then(function (qok) {
-        return self.listenChannel.bindQueue(uniqueName, self.exchangeName, self.routingKey || self.queueName);
+        var exchange = self.alternateExchange && self.alternateExchangeName ? self.alternateExchangeName : self.exchangeName;
+        return self.listenChannel.bindQueue(uniqueName, exchange, self.routingKey || self.queueName);
       }).then(function () {
         if (self.ack) {
           self.log('asserting error queue ' + self.errorQueueName);
