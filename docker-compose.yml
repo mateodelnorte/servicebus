@@ -18,7 +18,7 @@ services:
     command: npm run test:staging
 
   rabbitmq:
-    image: rabbitmq:3.7-management
+    image: rabbitmq:3.8-management
     networks:
       - servicebus
     ports:
