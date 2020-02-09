@@ -38,7 +38,7 @@
     "mocha": "6.0.1",
     "servicebus-retry": "0.0.13",
     "should": "13.2.3",
-    "sinon": "7.2.3"
+    "sinon": "8.1.1"
   },
   "optionalDependencies": {},
   "config": {
