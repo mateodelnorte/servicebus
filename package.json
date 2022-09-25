@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "amqplib": "0.5.3",
-    "debug": "4.1.1",
+    "debug": "4.3.4",
     "extend": "3.0.2",
     "readable-id-mjs": "1.0.0",
     "uuid": "3.3.2"
